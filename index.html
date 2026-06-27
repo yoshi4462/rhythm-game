@@ -1,12 +1,25 @@
+失礼しました！「URLから楽譜を自動生成する」ボタンが反応しなかったのは、プログラムの切り替え処理がうまく噛み合っていなかったのが原因です。
+
+また、デザインを当初の「白を基調としたシンプルなデザイン」に戻しました。背景を白、文字を黒ベースにし、プレイ画面のレーンなども見やすい明るいスタイルに変更しています。
+
+手動での音符打ち込み機能や動画再生プレイヤーは完全に排除されているため、「タイトルとURLを入れてボタンを押すだけ」で一瞬で音符が全自動生成されてリストに保存されます。
+
+---
+
+## 💻 修正版の完全コード (`index.html`)
+
+こちらのコードに丸ごと書き換えて保存し、アップロードしてください。
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Pure Auto Generator</title>
+    <title>Rhythm Stream - Simple White Edition</title>
     <style>
         /* ==========================================================================
-           全体デザイン（ミニマル・モノトーン＋ネオン）
+           全体デザイン（白を基調としたシンプルなデザイン）
            ========================================================================== */
         * {
             box-sizing: border-box;
@@ -16,8 +29,8 @@
         }
 
         body {
-            background-color: #111111;
-            color: #ffffff;
+            background-color: #ffffff;
+            color: #000000;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -38,13 +51,14 @@
             margin-bottom: 20px;
             letter-spacing: 2px;
             text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
         }
 
         button {
-            background-color: #ffffff;
-            color: #000000;
-            border: 1px solid #ffffff;
+            background-color: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
             padding: 12px 24px;
             font-size: 16px;
             font-weight: bold;
@@ -53,8 +67,8 @@
         }
 
         button:hover {
-            background-color: #000000;
-            color: #ffffff;
+            background-color: #ffffff;
+            color: #000000;
         }
 
         .screen {
@@ -68,9 +82,9 @@
         }
 
         .back-btn {
-            background-color: #111111;
-            color: #ffffff;
-            border-color: #ffffff;
+            background-color: #ffffff;
+            color: #000000;
+            border-color: #000000;
             align-self: flex-start;
             margin-bottom: 20px;
             padding: 8px 16px;
@@ -83,7 +97,7 @@
             padding-top: 56.25%;
             background-color: #000000;
             margin-bottom: 20px;
-            border: 1px solid #333;
+            border: 1px solid #ccc;
         }
 
         .video-container iframe, .video-container div {
@@ -103,7 +117,6 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            border-bottom: 2px solid #ffffff;
             padding-bottom: 15px;
             gap: 10px;
         }
@@ -119,9 +132,9 @@
             width: 100%;
             padding: 12px;
             font-size: 16px;
-            background-color: #222222;
-            border: 1px solid #ffffff;
-            color: #ffffff;
+            background-color: #ffffff;
+            border: 1px solid #000000;
+            color: #000000;
             outline: none;
         }
 
@@ -132,12 +145,12 @@
         }
 
         .chart-item {
-            border: 1px solid #ffffff;
+            border: 1px solid #000000;
             padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #222222;
+            background-color: #f9f9f9;
         }
 
         .chart-info h3 {
@@ -147,7 +160,7 @@
 
         .chart-info p {
             font-size: 13px;
-            color: #aaaaaa;
+            color: #666666;
         }
 
         .chart-btns {
@@ -156,7 +169,7 @@
         }
 
         .delete-btn {
-            background-color: #222222;
+            background-color: #ffffff;
             color: #ff4444;
             border-color: #ff4444;
         }
@@ -166,7 +179,7 @@
         }
 
         /* ==========================================================================
-           【画面2】プレイ画面 & ネオンノーツ
+           【画面2】プレイ画面
            ========================================================================== */
         .play-layout {
             display: flex;
@@ -190,8 +203,8 @@
             width: 100%;
             max-width: 400px;
             height: 450px;
-            border: 2px solid #ffffff;
-            background-color: #050505;
+            border: 2px solid #000000;
+            background-color: #ffffff;
             overflow: hidden;
         }
 
@@ -203,21 +216,20 @@
 
         .lane {
             flex: 1;
-            border-right: 1px solid #222222;
+            border-right: 1px solid #e0e0e0;
             position: relative;
             height: 100%;
         }
 
         .lane:last-child { border-right: none; }
-        .lane.active { background: linear-gradient(to top, rgba(255,255,255,0.1), transparent); }
+        .lane.active { background-color: #f0f0f0; }
 
         .judgment-line {
             position: absolute;
             bottom: 60px;
             width: 100%;
             height: 3px;
-            background-color: #ffffff;
-            box-shadow: 0 0 10px #ffffff;
+            background-color: #000000;
             z-index: 5;
         }
 
@@ -228,7 +240,7 @@
             text-align: center;
             font-weight: bold;
             font-size: 16px;
-            color: #ffffff;
+            color: #000000;
         }
 
         .note {
@@ -239,11 +251,8 @@
             left: calc(50% - 21px);
             z-index: 3;
             transform: translateY(-21px);
+            background-color: #000000; /* シンプルな黒のノーツ */
         }
-        .note-0 { background: #ff0055; box-shadow: 0 0 15px #ff0055; }
-        .note-1 { background: #00e5ff; box-shadow: 0 0 15px #00e5ff; }
-        .note-2 { background: #00ff66; box-shadow: 0 0 15px #00ff66; }
-        .note-3 { background: #ffea00; box-shadow: 0 0 15px #ffea00; }
 
         .judgment-text {
             position: absolute;
@@ -255,7 +264,6 @@
             height: 45px;
             pointer-events: none;
             z-index: 10;
-            text-shadow: 0 0 10px rgba(255,255,255,0.8);
         }
 
         .play-controls {
@@ -265,52 +273,51 @@
         }
 
         /* ==========================================================================
-           【画面3】オート生成専用画面（超シンプル）
+           【画面3】オート生成専用画面
            ========================================================================== */
         .editor-form {
-            border: 1px solid #ffffff;
+            border: 1px solid #000000;
             padding: 25px;
             margin-bottom: 25px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            background-color: #222222;
+            background-color: #f9f9f9;
         }
 
         .editor-form input {
             padding: 12px;
             font-size: 16px;
-            background-color: #111111;
-            border: 1px solid #ffffff;
-            color: #ffffff;
+            background-color: #ffffff;
+            border: 1px solid #000000;
+            color: #000000;
             outline: none;
             width: 100%;
         }
 
         .generate-btn {
-            background-color: #00ff66;
-            color: #000000;
-            border-color: #00ff66;
+            background-color: #000000;
+            color: #ffffff;
+            border-color: #000000;
             padding: 14px;
             font-size: 16px;
             width: 100%;
         }
         .generate-btn:hover {
-            background-color: #000000;
-            color: #00ff66;
+            background-color: #ffffff;
+            color: #000000;
         }
 
         .status-box {
-            border: 1px solid #ffffff;
-            background-color: #111111;
+            border: 1px solid #ccc;
+            background-color: #ffffff;
             padding: 15px;
             font-size: 14px;
-            color: #cccccc;
+            color: #333333;
             text-align: center;
             min-height: 50px;
         }
 
-        /* 非表示用のダミープレイヤー用コンテナ */
         #dummy-player-container {
             width: 1px;
             height: 1px;
@@ -377,7 +384,7 @@
         
         <div class="editor-form">
             <h3>🎵 YouTubeから自動で音符を作る</h3>
-            <p style="font-size: 13px; color: #aaa;">タイトルとURLを入力してボタンを押すだけで、AIが自動で1曲分の譜面を作ります。</p>
+            <p style="font-size: 13px; color: #666;">タイトルとURLを入力してボタンを押すだけで、自動で1曲分の譜面を作ります。</p>
             
             <input type="text" id="edit-title" placeholder="曲のタイトルを入力してください">
             <input type="text" id="edit-url" placeholder="YouTubeの動画URL または 動画ID を入力">
@@ -418,7 +425,6 @@
     const NOTE_SPEED = 6;        
 
     let autoGeneratedNotes = [];
-    let isTargetVideoReady = false;
 
     // Web Audio API 打鍵音
     let audioCtx = null;
@@ -454,7 +460,7 @@
         const filteredCharts = charts.filter(chart => chart.title.toLowerCase().includes(searchWord));
 
         if (filteredCharts.length === 0) {
-            container.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px;">該当する楽譜が見つかりません。</p>';
+            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">該当する楽譜が見つかりません。</p>';
             return;
         }
 
@@ -507,7 +513,6 @@
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // 全自動生成プロセスの開始
     function startAutoGenerationProcess() {
         const title = document.getElementById('edit-title').value.trim();
         const urlInput = document.getElementById('edit-url').value;
@@ -524,22 +529,19 @@
         }
 
         currentEditVideoId = id;
-        isTargetVideoReady = false;
         statusBox.innerText = "⏳ 動画の解析中...（2〜3秒かかります）";
 
         if (playerEdit && typeof playerEdit.cueVideoById === 'function') {
             playerEdit.cueVideoById(currentEditVideoId);
         }
 
-        // 3秒後に動画情報を取得して自動生成を走らせる（完全に自動）
         setTimeout(() => {
-            let duration = 240; // 取得できなかった場合のデフォルト（4分）
+            let duration = 240; 
             if (playerEdit && typeof playerEdit.getDuration === 'function') {
                 const ytDuration = playerEdit.getDuration();
                 if (ytDuration > 10) duration = ytDuration;
             }
             
-            // 自動音符生成ロジック
             autoGeneratedNotes = [];
             let currentTime = 4.0; 
             const keysList = ['D', 'F', 'J', 'K'];
@@ -554,7 +556,6 @@
                 currentTime += nextGap;
             }
 
-            // ローカルストレージへ即時保存
             const newChart = {
                 id: 'chart_' + Date.now(),
                 title: title,
@@ -565,10 +566,9 @@
             charts.push(newChart);
             localStorage.setItem('stream_charts', JSON.stringify(charts));
 
-            statusBox.innerText = `✨ 成功！「${title}」の音符を${autoGeneratedNotes.length}個自動生成して保存しました！`;
-            alert(`🎉 譜面の自動生成に成功しました！\n「${title}」がリストに追加されたので、すぐに遊べます！`);
+            statusBox.innerText = `✨ 成功！「${title}」の音符を自動生成して保存しました！`;
+            alert(`🎉 譜面の自動生成に成功しました！\n「${title}」が追加されました！`);
             
-            // 入力欄をクリアしてトップに戻る
             document.getElementById('edit-title').value = '';
             document.getElementById('edit-url').value = '';
             switchScreen('top');
@@ -611,7 +611,6 @@
         }
     }
 
-    // プレイ画面のキーボード処理のみ残す
     window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
         const keyIndex = KEYS.indexOf(key);
@@ -647,11 +646,11 @@
             if (count > 0) {
                 updateJudgmentUI(count, "#ff0055");
             } else if (count === 0) {
-                updateJudgmentUI("START!!", "#00ff66");
+                updateJudgmentUI("START!!", "#00cc44");
             } else {
                 clearInterval(countdownIntervalId);
                 isCountingDown = false;
-                updateJudgmentUI("", "#fff");
+                updateJudgmentUI("", "#000");
                 if (playerPlay) playerPlay.playVideo();
             }
         }, 1000);
@@ -690,7 +689,7 @@
         if (nextNoteIndex >= loadedChartNotes.length && activeNotes.length === 0) {
             stopGameLoops();
             if (playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo(); 
-            updateJudgmentUI("CLEAR!!", "#00ff66");
+            updateJudgmentUI("CLEAR!!", "#00cc44");
         }
     }
 
@@ -698,7 +697,7 @@
         const lane = document.getElementById(`lane-play-${laneIndex}`);
         if (!lane) return;
         const element = document.createElement('div');
-        element.className = `note note-${laneIndex}`; 
+        element.className = 'note'; 
         element.style.top = '0px';
         lane.appendChild(element);
 
@@ -717,7 +716,7 @@
             note.element.style.top = note.y + 'px';
 
             if (note.y > JUDGMENT_LINE_Y + 40) {
-                updateJudgmentUI("Miss", "#555555");
+                updateJudgmentUI("Miss", "#888888");
                 combo = 0;
                 document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
                 if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
@@ -743,20 +742,20 @@
         let scored = false;
 
         if (diff <= 16) {
-            updateJudgmentUI("Perfect!", "#ffffff");
+            updateJudgmentUI("Perfect!", "#000000");
             score += 100; combo++; scored = true;
         } else if (diff <= 36) {
-            updateJudgmentUI("Great!", "#00e5ff");
+            updateJudgmentUI("Great!", "#333333");
             score += 50; combo++; scored = true;
         } else if (diff <= 56) {
-            updateJudgmentUI("Good", "#aaaaaa");
+            updateJudgmentUI("Good", "#666666");
             score += 20; combo++; scored = true;
         }
 
         if (scored) {
             document.getElementById('score-display').innerText = `SCORE: ${score}`;
             document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-            if (targetNote.element.parentNode) targetNote.element.parentNode.removeChild(note.element);
+            if (targetNote.element.parentNode) targetNote.element.parentNode.removeChild(targetNote.element);
             activeNotes.splice(targetIdx, 1);
         }
     }
@@ -765,4 +764,39 @@
         const el = document.getElementById('judgment-text');
         el.innerText = text;
         el.style.color = color;
-        el.style.text
+    }
+
+    function stopGameLoops() {
+        isPlaying = false;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        if (gameTimerId) clearInterval(gameTimerId);
+    }
+
+    function clickResetButton() {
+        if (countdownIntervalId) clearInterval(countdownIntervalId);
+        isCountingDown = false;
+        resetPlayGame(); 
+        if (playerPlay && typeof playerPlay.seekTo === 'function') {
+            playerPlay.seekTo(0, true);
+            playerPlay.pauseVideo();
+        }
+    }
+
+    function resetPlayGame() {
+        stopGameLoops();
+        score = 0;
+        combo = 0;
+        nextNoteIndex = 0;
+        document.getElementById('score-display').innerText = "SCORE: 0";
+        document.getElementById('combo-display').innerText = "COMBO: 0";
+        document.getElementById('judgment-text').innerText = "";
+        activeNotes.forEach(note => {
+            if (note.element && note.element.parentNode) note.element.parentNode.removeChild(note.element);
+        });
+        activeNotes = [];
+    }
+</script>
+</body>
+</html>
+
+```
