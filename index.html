@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Ultimate White Edition</title>
+    <title>Rhythm Stream - Simple One Screen</title>
     <style>
         /* ==========================================================================
            全体デザイン：背景は白、文字と枠線は黒の超シンプルスタイル
@@ -27,15 +27,15 @@
 
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
             display: flex;
             flex-direction: column;
+            gap: 20px;
         }
 
         h1 {
             font-size: 26px;
             text-align: center;
-            margin-bottom: 25px;
             letter-spacing: 2px;
             font-weight: bold;
             border-bottom: 2px solid #000000;
@@ -51,6 +51,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.15s ease;
+            width: 100%;
         }
 
         button:hover {
@@ -58,20 +59,7 @@
             color: #000000;
         }
 
-        .screen {
-            display: none;
-            width: 100%;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .screen.active {
-            display: flex;
-        }
-
-        /* ==========================================================================
-           【画面1】トップ画面（URL入力フォーム ＆ 楽曲リスト）
-           ========================================================================== */
+        /* URL入力エリア */
         .input-box {
             border: 2px solid #000000;
             padding: 20px;
@@ -79,11 +67,6 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-        }
-
-        .input-box h3 {
-            font-size: 16px;
-            font-weight: bold;
         }
 
         .input-box input {
@@ -96,54 +79,7 @@
             width: 100%;
         }
 
-        .list-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 15px;
-            border-bottom: 1px solid #000000;
-            padding-bottom: 5px;
-        }
-
-        .song-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .song-item {
-            border: 1px solid #000000;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #ffffff;
-        }
-
-        .song-info h3 {
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-
-        .song-info p {
-            font-size: 12px;
-            color: #666666;
-        }
-
-        .delete-btn {
-            background-color: #ffffff;
-            color: #ff4444;
-            border-color: #ff4444;
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-        .delete-btn:hover {
-            background-color: #ff4444;
-            color: #ffffff;
-        }
-
-        /* ==========================================================================
-           【画面2】プレイ画面
-           ========================================================================== */
+        /* YouTubeプレイヤーエリア */
         .video-wrapper {
             position: relative;
             width: 100%;
@@ -160,18 +96,20 @@
             height: 100%;
         }
 
+        /* スコア・コンボ */
         .game-status {
             display: flex;
             justify-content: space-between;
             font-size: 18px;
             font-weight: bold;
-            padding: 0 10px;
+            padding: 0 5px;
         }
 
+        /* ゲーム盤面 */
         .game-container {
             position: relative;
             width: 100%;
-            height: 400px;
+            height: 380px;
             border: 2px solid #000000;
             background-color: #ffffff;
             overflow: hidden;
@@ -213,12 +151,12 @@
 
         .note {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            left: calc(50% - 20px);
+            left: calc(50% - 18px);
             z-index: 3;
-            transform: translateY(-20px);
+            transform: translateY(-18px);
             background-color: #000000;
         }
 
@@ -248,47 +186,34 @@
 <div class="container">
     <h1>Rhythm Stream</h1>
 
-    <div id="view-top" class="screen active">
-        <div class="input-box">
-            <h3>✨ URLから楽譜を自動生成する</h3>
-            <input type="text" id="input-title" placeholder="曲のタイトルを入力してください">
-            <input type="text" id="input-url" placeholder="YouTubeの動画URL または 動画ID を入力">
-            <button onclick="generateNewChart()">⚡ 音符を全自動生成してリストに保存</button>
-        </div>
-
-        <div class="list-title">📋 登録された楽譜リスト</div>
-        <div id="list-container" class="song-list"></div>
+    <div class="input-box">
+        <input type="text" id="input-url" placeholder="YouTubeの動画URL または 動画ID をコピペ">
+        <button onclick="loadAndGenerateChart()">⚡ 動画を読み込んで楽譜を自動生成</button>
     </div>
 
-    <div id="view-play" class="screen">
-        <button onclick="toTopView()" style="background-color: #ffffff; color: #000000; border-color: #000000; align-self: flex-start; padding: 6px 12px; font-size: 14px;">← リストに戻る</button>
-        
-        <h2 id="play-title" style="text-align: center; font-size: 18px;">-</h2>
-        
-        <div class="video-wrapper">
-            <div id="yt-player"></div>
-        </div>
+    <div class="video-wrapper">
+        <div id="yt-player"></div>
+    </div>
 
-        <div class="game-status">
-            <div id="txt-score">SCORE: 0</div>
-            <div id="txt-combo">COMBO: 0</div>
-        </div>
+    <div class="game-status">
+        <div id="txt-score">SCORE: 0</div>
+        <div id="txt-combo">COMBO: 0</div>
+    </div>
 
-        <div class="game-container">
-            <div id="txt-judge" class="ui-text"></div>
-            <div class="line"></div>
-            <div class="lanes">
-                <div class="lane" id="lane-0"><span class="key-text">D</span></div>
-                <div class="lane" id="lane-1"><span class="key-text">F</span></div>
-                <div class="lane" id="lane-2"><span class="key-text">J</span></div>
-                <div class="lane" id="lane-3"><span class="key-text">K</span></div>
-            </div>
+    <div class="game-container">
+        <div id="txt-judge" class="ui-text"></div>
+        <div class="line"></div>
+        <div class="lanes">
+            <div class="lane" id="lane-0"><span class="key-text">D</span></div>
+            <div class="lane" id="lane-1"><span class="key-text">F</span></div>
+            <div class="lane" id="lane-2"><span class="key-text">J</span></div>
+            <div class="lane" id="lane-3"><span class="key-text">K</span></div>
         </div>
+    </div>
 
-        <div class="control-panel">
-            <button onclick="readyToPlay()">▶ 3秒後にスタート</button>
-            <button onclick="resetGame()" style="background-color: #ffffff; color: #000000;">🔄 リセット</button>
-        </div>
+    <div class="control-panel">
+        <button onclick="startCountdown()">▶ 3秒後にスタート</button>
+        <button onclick="resetGame()" style="background-color: #ffffff; color: #000000;">🔄 リセット</button>
     </div>
 </div>
 
@@ -297,7 +222,6 @@
 <script>
     const KEY_CHARS = ['d', 'f', 'j', 'k'];
     let ytPlayer = null;
-    let currentVideoId = '';
     
     let isPlaying = false;
     let isWaiting = false;
@@ -311,58 +235,15 @@
     let frameId = null;
     let countdownId = null;
 
-    const TARGET_Y = 340; 
+    const TARGET_Y = 320; 
     const FALL_SPEED = 6; 
 
-    // 打鍵音
-    let audioCtx = null;
-    function playSound() {
-        try {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(350, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
-        } catch(e) {}
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        if (!localStorage.getItem('rhythm_songs')) {
-            localStorage.setItem('rhythm_songs', JSON.stringify([]));
-        }
-        showSongList();
-    });
-
-    function showSongList() {
-        const container = document.getElementById('list-container');
-        container.innerHTML = '';
-        const songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
-
-        if (songs.length === 0) {
-            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px; font-size:14px;">楽譜がありません。上の入力フォームから追加してください。</p>';
-            return;
-        }
-
-        songs.forEach(song => {
-            const item = document.createElement('div');
-            item.className = 'song-item';
-            item.innerHTML = `
-                <div class="song-info">
-                    <h3>${song.title}</h3>
-                    <p>総ノーツ数: ${song.notes.length}個</p>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <button onclick="startPlayMode('${song.id}')" style="padding:6px 14px; font-size:14px;">▶ 遊ぶ</button>
-                    <button class="delete-btn" onclick="deleteSong('${song.id}')">削除</button>
-                </div>
-            `;
-            container.appendChild(item);
+    // YouTube API初期化
+    function onYouTubeIframeAPIReady() {
+        ytPlayer = new YT.Player('yt-player', {
+            videoId: 'P_NfP9_I6As', // 初期動画
+            playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 1 },
+            events: { 'onStateChange': onPlayerStateChange }
         });
     }
 
@@ -375,20 +256,26 @@
         return (m && m[2].length === 11) ? m[2] : null;
     }
 
-    // 全自動音符生成ロジック
-    function generateNewChart() {
-        const title = document.getElementById('input-title').value.trim();
+    // URLを読み込んでその場で瞬時に音符を自動生成する処理
+    function loadAndGenerateChart() {
         const urlValue = document.getElementById('input-url').value;
         const id = extractId(urlValue);
 
-        if (!title) { alert('曲のタイトルを入力してください！'); return; }
-        if (!id) { alert('正しいYouTubeのURLまたは動画IDを入力してください。'); return; }
+        if (!id) {
+            alert('有効なYouTubeのURLまたは動画IDをコピペしてください。');
+            return;
+        }
 
+        // 読み込んだURLの動画をプレイヤーにセット
+        if (ytPlayer && typeof ytPlayer.cueVideoById === 'function') {
+            ytPlayer.cueVideoById(id);
+        }
+
+        // 4分間分のノーツデータをDFJKに全自動ランダム配置
         const generated = [];
         let timeTracker = 4.0; 
         const keys = ['D', 'F', 'J', 'K'];
 
-        // 4分間分のリズムノーツをD, F, J, Kに自動分散配置
         while (timeTracker < 240) {
             const randomKey = keys[Math.floor(Math.random() * keys.length)];
             generated.push({
@@ -398,69 +285,13 @@
             timeTracker += 0.4 + (Math.floor(Math.random() * 3) * 0.2);
         }
 
-        const newSong = {
-            id: 'song_' + Date.now(),
-            title: title,
-            videoId: id,
-            notes: generated
-        };
-
-        const songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
-        songs.push(newSong);
-        localStorage.setItem('rhythm_songs', JSON.stringify(songs));
-
-        alert(`🎉 「${title}」の音符データを全自動生成しました！\n下のリストからいつでも遊べます。`);
-        
-        document.getElementById('input-title').value = '';
-        document.getElementById('input-url').value = '';
-        showSongList();
-    }
-
-    function deleteSong(id) {
-        if (!confirm('この曲を削除しますか？')) return;
-        let songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
-        songs = songs.filter(s => s.id !== id);
-        localStorage.setItem('rhythm_songs', JSON.stringify(songs));
-        showSongList();
-    }
-
-    function startPlayMode(id) {
-        const songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
-        const target = songs.find(s => s.id === id);
-        if (!target) return;
-
-        document.getElementById('play-title').innerText = `🎵 曲名: ${target.title}`;
-        currentVideoId = target.videoId;
-        songNotes = target.notes.sort((a, b) => a.time - b.time);
-
-        if (ytPlayer && typeof ytPlayer.cueVideoById === 'function') {
-            ytPlayer.cueVideoById(currentVideoId);
-        }
-
-        document.getElementById('view-top').classList.remove('active');
-        document.getElementById('view-play').classList.add('active');
-    }
-
-    function toTopView() {
-        if (countdownId) clearInterval(countdownId);
-        stopGame();
-        if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+        songNotes = generated;
         resetGame();
-
-        document.getElementById('view-play').classList.remove('active');
-        document.getElementById('view-top').classList.add('active');
-        showSongList();
+        alert('✨ 楽譜の自動生成に成功しました！\n下の「3秒後にスタート」ボタンを押して遊んでください。');
     }
 
-    function onYouTubeIframeAPIReady() {
-        ytPlayer = new YT.Player('yt-player', {
-            videoId: 'P_NfP9_I6As',
-            playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 1 },
-            events: { 'onStateChange': onPlayerStateChange }
-        });
-    }
-
-    function readyToPlay() {
+    // 3秒カウントダウン
+    function startCountdown() {
         if (isPlaying || isWaiting) return;
         isWaiting = true;
         resetGame();
@@ -547,6 +378,7 @@
         frameId = requestAnimationFrame(gameLoop);
     }
 
+    // 打鍵キー判定 (D, F, J, K)
     window.addEventListener('keydown', (e) => {
         const k = e.key.toLowerCase();
         const idx = KEY_CHARS.indexOf(k);
@@ -554,7 +386,6 @@
 
         const lane = document.getElementById(`lane-${idx}`);
         if (lane) lane.classList.add('active');
-        playSound();
 
         if (isPlaying && !isWaiting) {
             let targetIdx = -1;
