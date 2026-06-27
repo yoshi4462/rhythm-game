@@ -228,9 +228,9 @@
             top: 35%;
             width: 100%;
             text-align: center;
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
-            height: 40px;
+            height: 45px;
             pointer-events: none;
             z-index: 10;
         }
@@ -321,7 +321,7 @@
             <button onclick="switchScreen('edit')">✨ 新しい譜面を打ち込む</button>
         </div>
         <div id="chart-list-container" class="chart-list">
-            </div>
+        </div>
     </div>
 
     <div id="screen-play" class="screen">
@@ -351,7 +351,7 @@
             </div>
 
             <div class="play-controls">
-                <button id="btn-play-start" onclick="startPlayGame()">▶ 曲を再生してスタート</button>
+                <button id="btn-play-start" onclick="startCountdown()">▶ 3秒後にスタート</button>
                 <button onclick="clickResetButton()">🔄 リセット</button>
             </div>
         </div>
@@ -399,7 +399,6 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-    // 定数・グローバル変数
     const DEFAULT_ID = 'P_NfP9_I6As'; 
     const KEYS = ['d', 'f', 'j', 'k'];
     
@@ -408,8 +407,8 @@
     let currentPlayVideoId = DEFAULT_ID;
     let currentEditVideoId = DEFAULT_ID;
 
-    // ゲーム用コア変数
     let isPlaying = false;
+    let isCountingDown = false; 
     let score = 0;
     let combo = 0;
     let activeNotes = [];
@@ -417,13 +416,12 @@
     let nextNoteIndex = 0;
     let gameTimerId = null;
     let animationFrameId = null;
+    let countdownIntervalId = null;
     const JUDGMENT_LINE_Y = 390; 
     const NOTE_SPEED = 6;        
 
-    // 打ち込み用変数
     let recordedNotes = [];
 
-    // 起動時にLocalStorageからデータを読み込んでリスト表示
     window.addEventListener('DOMContentLoaded', () => {
         setupDefaultChart();
         renderChartList();
@@ -445,20 +443,14 @@
         }
     }
 
-    // ==========================================================================
-    // 譜面データの管理（LocalStorage）
-    // ==========================================================================
     function renderChartList() {
         const container = document.getElementById('chart-list-container');
         container.innerHTML = '';
-
         const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
-
         if (charts.length === 0) {
             container.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">登録されている楽譜がありません。右上のボタンから作ってみましょう！</p>';
             return;
         }
-
         charts.forEach(chart => {
             const item = document.createElement('div');
             item.className = 'chart-item';
@@ -509,30 +501,22 @@
             alert('ノーツデータがありません。動画を再生しながらD, F, J, Kキーを押してリズムを打ち込んでください。');
             return;
         }
-
         const newChart = {
             id: 'chart_' + Date.now(),
             title: title,
             videoId: currentEditVideoId,
             notes: recordedNotes
         };
-
         const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
         charts.push(newChart);
         localStorage.setItem('stream_charts', JSON.stringify(charts));
-
         alert(`楽譜「${title}」の保存が完了しました！トップ一覧に追加されます。`);
-        
         clearEditorLogs();
         document.getElementById('edit-title').value = '';
         document.getElementById('edit-url').value = '';
-        
         switchScreen('top');
     }
 
-    // ==========================================================================
-    // YouTube API 関連
-    // ==========================================================================
     function extractVideoId(urlOrId) {
         if (!urlOrId) return null;
         const str = urlOrId.trim();
@@ -575,12 +559,15 @@
         document.getElementById('screen-play').classList.remove('active');
         document.getElementById('screen-edit').classList.remove('active');
 
+        if (countdownIntervalId) clearInterval(countdownIntervalId);
+        isCountingDown = false;
+
         if (playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo();
         if (playerEdit && typeof playerEdit.pauseVideo === 'function') playerEdit.pauseVideo();
         resetPlayGame();
 
         if (name === 'top') {
-            document.getElementById('screen-top').classList.add('active');
+            document.getElementById('screen-top').classList.add('active'); // 修正箇所（classListの追加）
             renderChartList();
         } else if (name === 'play') {
             document.getElementById('screen-play').classList.add('active');
@@ -607,7 +594,7 @@
         if (document.getElementById('screen-play').classList.contains('active')) {
             const lane = document.getElementById(`lane-play-${keyIndex}`);
             if (lane) lane.classList.add('active');
-            if (isPlaying) checkHitJudgment(keyIndex);
+            if (isPlaying && !isCountingDown) checkHitJudgment(keyIndex);
         }
 
         if (document.getElementById('screen-edit').classList.contains('active') && playerEdit) {
@@ -617,7 +604,6 @@
                     time: parseFloat(time.toFixed(2)),
                     key: key.toUpperCase()
                 });
-
                 const logArea = document.getElementById('log-area');
                 const log = document.createElement('div');
                 log.className = 'log-entry';
@@ -638,12 +624,32 @@
     });
 
     // ==========================================================================
-    // ゲームプレイ用の進行ロジック
+    // 3・2·1 カウントダウンシステム
     // ==========================================================================
-    function startPlayGame() {
-        if (!playerPlay) return;
-        // リセット状態からそのまま再生
-        playerPlay.playVideo();
+    function startCountdown() {
+        if (isPlaying || isCountingDown) return;
+        
+        isCountingDown = true;
+        resetPlayGame(); 
+        
+        let count = 3;
+        updateJudgmentUI(count, "#ff0000");
+
+        countdownIntervalId = setInterval(() => {
+            count--;
+            if (count > 0) {
+                updateJudgmentUI(count, "#ff0000");
+            } else if (count === 0) {
+                updateJudgmentUI("START!!", "#00cc00");
+            } else {
+                clearInterval(countdownIntervalId);
+                isCountingDown = false;
+                updateJudgmentUI("", "#000");
+                if (playerPlay) {
+                    playerPlay.playVideo();
+                }
+            }
+        }, 1000);
     }
 
     function onPlayerPlayStateChange(event) {
@@ -676,14 +682,13 @@
             }
         }
 
-        // 【新機能】すべてのノーツを生成し終え、かつ画面上にもうノーツが残っていない場合
+        // 全ノーツが流れ終わり、画面上に何も残っていなければ「確実に」終了して動画ストップ
         if (nextNoteIndex >= loadedChartNotes.length && activeNotes.length === 0) {
-            setTimeout(() => {
-                if (playerPlay && typeof playerPlay.pauseVideo === 'function') {
-                    playerPlay.pauseVideo(); // 動画を自動停止
-                    updateJudgmentUI("CLEAR!!", "#00cc00");
-                }
-            }, 500);
+            stopGameLoops();
+            if (playerPlay && typeof playerPlay.pauseVideo === 'function') {
+                playerPlay.pauseVideo(); 
+            }
+            updateJudgmentUI("CLEAR!!", "#00cc00");
         }
     }
 
@@ -704,7 +709,6 @@
 
     function gameRenderLoop() {
         if (!isPlaying) return;
-
         for (let i = activeNotes.length - 1; i >= 0; i--) {
             const note = activeNotes[i];
             note.y += NOTE_SPEED;
@@ -714,7 +718,6 @@
                 updateJudgmentUI("Miss", "#888888");
                 combo = 0;
                 document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-                
                 if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
                 activeNotes.splice(i, 1);
             }
@@ -725,14 +728,12 @@
     function checkHitJudgment(laneIndex) {
         let targetIdx = -1;
         let lowestY = -1;
-
         for (let i = 0; i < activeNotes.length; i++) {
             if (activeNotes[i].lane === laneIndex && activeNotes[i].y > lowestY) {
                 lowestY = activeNotes[i].y;
                 targetIdx = i;
             }
         }
-
         if (targetIdx === -1) return;
 
         const targetNote = activeNotes[targetIdx];
@@ -770,11 +771,16 @@
         if (gameTimerId) clearInterval(gameTimerId);
     }
 
-    // 【改良】ユーザーが「リセットボタン」を押したときの処理
+    // ==========================================================================
+    // 【確実化】リセット処理
+    // ==========================================================================
     function clickResetButton() {
-        resetPlayGame(); // ゲーム情報を初期化
+        if (countdownIntervalId) clearInterval(countdownIntervalId);
+        isCountingDown = false;
+
+        resetPlayGame(); 
         
-        // YouTube動画を0秒（最初）に戻して、一時停止状態にする
+        // 動画を確実に0.0秒に巻き戻して、一時停止状態にします
         if (playerPlay && typeof playerPlay.seekTo === 'function') {
             playerPlay.seekTo(0, true);
             playerPlay.pauseVideo();
