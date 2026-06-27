@@ -2,142 +2,31 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>YouTube DFJK リズムゲーム</title>
+    <title>YouTube DFJK リズムゲーム (修正版)</title>
     <style>
         body {
             background-color: #1a1a1a;
             color: #ffffff;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            margin: 0;
             padding: 20px;
         }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .input-area {
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            width: 350px;
-            padding: 10px;
-            border: none;
-            border-radius: 4px 0 0 4px;
-            outline: none;
-        }
-
-        button {
-            padding: 10px 20px;
-            border: none;
-            background-color: #ff4757;
-            color: white;
-            font-weight: bold;
-            border-radius: 0 4px 4px 0;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #ff6b81;
-        }
-
-        #game-layout {
-            display: flex;
-            gap: 30px;
-            align-items: flex-start;
-        }
-
-        /* ゲーム画面（レーン）のスタイル */
-        #game-container {
-            width: 360px;
-            height: 500px;
-            background-color: #111;
-            border: 4px solid #333;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #lanes {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .lane {
-            flex: 1;
-            height: 100%;
-            border-right: 1px solid #222;
-            position: relative;
-            box-sizing: border-box;
-        }
-
-        .lane:last-child {
-            border-right: none;
-        }
-
-        /* 判定ライン */
-        #judge-line {
-            position: absolute;
-            bottom: 60px;
-            width: 100%;
-            height: 6px;
-            background-color: #ff4757;
-            box-shadow: 0 0 10px #ff4757;
-            z-index: 10;
-        }
-
-        /* キー表示ラベル */
-        .key-label {
-            position: absolute;
-            bottom: 15px;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-            color: #666;
-        }
-
-        /* ノーツのスタイル */
-        .note {
-            position: absolute;
-            width: 90%;
-            left: 5%;
-            height: 15px;
-            background: linear-gradient(to bottom, #00d2d3, #00a8ff);
-            border-radius: 4px;
-            box-shadow: 0 0 8px #00d2d3;
-            z-index: 5;
-        }
-
-        /* コンボと判定の文字表示 */
-        #ui-overlay {
-            position: absolute;
-            top: 20%;
-            width: 100%;
-            text-align: center;
-            pointer-events: none;
-            z-index: 20;
-        }
-
-        #judge-text {
-            font-size: 28px;
-            font-weight: bold;
-            height: 35px;
-            text-shadow: 0 0 5px #000;
-        }
-
-        #combo-text {
-            font-size: 20px;
-            color: #feca57;
-            text-shadow: 0 0 5px #000;
-        }
+        .input-area { margin-bottom: 20px; }
+        input[type="text"] { width: 350px; padding: 10px; border-radius: 4px 0 0 4px; border: none; }
+        button { padding: 10px 20px; background-color: #ff4757; color: white; font-weight: bold; border: none; border-radius: 0 4px 4px 0; cursor: pointer; }
+        #game-layout { display: flex; gap: 30px; }
+        #game-container { width: 360px; height: 500px; background-color: #111; border: 4px solid #333; border-radius: 8px; position: relative; overflow: hidden; }
+        #lanes { display: flex; width: 100%; height: 100%; }
+        .lane { flex: 1; height: 100%; border-right: 1px solid #222; position: relative; }
+        .lane:last-child { border-right: none; }
+        #judge-line { position: absolute; bottom: 60px; width: 100%; height: 6px; background-color: #ff4757; box-shadow: 0 0 10px #ff4757; z-index: 10; }
+        .key-label { position: absolute; bottom: 15px; width: 100%; text-align: center; font-weight: bold; color: #666; }
+        .note { position: absolute; width: 90%; left: 5%; height: 15px; background: linear-gradient(to bottom, #00d2d3, #00a8ff); border-radius: 4px; z-index: 5; }
+        #ui-overlay { position: absolute; top: 20%; width: 100%; text-align: center; pointer-events: none; z-index: 20; }
+        #judge-text { font-size: 28px; font-weight: bold; height: 35px; }
+        #combo-text { font-size: 20px; color: #feca57; }
     </style>
 </head>
 <body>
@@ -151,13 +40,11 @@
 
     <div id="game-layout">
         <div id="player"></div>
-
         <div id="game-container">
             <div id="ui-overlay">
                 <div id="judge-text"></div>
                 <div id="combo-text"></div>
             </div>
-            
             <div id="lanes">
                 <div class="lane" id="lane-D"><div class="key-label">D</div></div>
                 <div class="lane" id="lane-F"><div class="key-label">F</div></div>
@@ -169,7 +56,6 @@
     </div>
 
 <script>
-// 1. YouTube Iframe Player API の読み込み
 var tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0];
@@ -180,72 +66,42 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '240',
         width: '360',
-        videoId: '', // 初回は空
-        events: {
-            'onStateChange': onPlayerStateChange
-        }
+        videoId: '', 
+        events: { 'onStateChange': onPlayerStateChange }
     });
 }
 
-// URLから動画IDを抜いて再生
+// どんなURL形式からでもIDをぶっこ抜く修正版ロジック
+function extractVideoId(url) {
+    var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    var match = url.match(regExp);
+    return (match && match[2].length == 11) ? match[2] : null;
+}
+
 function loadVideo() {
     var url = document.getElementById('video-url').value;
-    var videoId = "";
-    if(url.includes("v=")) {
-        videoId = url.split("v=")[1].split("&")[0];
-    } else if(url.includes("youtu.be/")) {
-        videoId = url.split("youtu.be/")[1].split("?")[0];
-    }
+    var videoId = extractVideoId(url);
     
     if(videoId) {
         player.loadVideoById(videoId);
-        generateAutoChart(); // 譜面データの自動生成
+        generateAutoChart(); 
         resetGameUI();
     } else {
-        alert("有効なYouTubeのURLを入力してください。");
+        alert("URLから動画IDを見つけられませんでした。通常の共有URLなどを試してください。");
     }
 }
 
-// 2. ゲームのデータ管理
 var chart = [];
 var combo = 0;
-var keyMap = { 'D': 0, 'F': 1, 'J': 2, 'K': 3 };
 var laneNames = ['D', 'F', 'J', 'K'];
 
-// 疑似的な「自動譜面生成」ロジック
-// ※完全な音響解析はHTML単体かつYouTubeのセキュリティ上難しいため、
-// アルゴリズム的にそれっぽいリズムの間隔（0.25秒や0.5秒の倍数）をシード値ベースで自動配置します
 function generateAutoChart() {
     chart = [];
-    var totalDuration = 300; // 最大5分間分作成
-    var currentTime = 2.0;   // 開始2秒後からノーツを配置
-    
-    // 規則性とランダム性を混ぜて、曲っぽいリズムを作る
-    while (currentTime < totalDuration) {
-        var pattern = Math.random();
-        
-        if (pattern < 0.4) {
-            // 単押し
-            chart.push({ time: currentTime, lane: laneNames[Math.floor(Math.random() * 4)], hit: false, spawned: false });
-            currentTime += 0.5;
-        } else if (pattern < 0.7) {
-            // 連打（8分音符気味）
-            var selectedLane = laneNames[Math.floor(Math.random() * 4)];
-            for(var i=0; i<3; i++) {
-                chart.push({ time: currentTime, lane: selectedLane, hit: false, spawned: false });
-                currentTime += 0.25;
-            }
-        } else if (pattern < 0.9) {
-            // 同時押し
-            var l1 = Math.floor(Math.random() * 2); // DかF
-            var l2 = Math.floor(Math.random() * 2) + 2; // JかK
-            chart.push({ time: currentTime, lane: laneNames[l1], hit: false, spawned: false });
-            chart.push({ time: currentTime, lane: laneNames[l2], hit: false, spawned: false });
-            currentTime += 0.5;
-        } else {
-            // お休み（ブレイク）
-            currentTime += 1.0;
-        }
+    var currentTime = 2.0;   
+    for (var i = 0; i < 400; i++) {
+        var randomLane = laneNames[Math.floor(Math.random() * 4)];
+        chart.push({ time: currentTime, lane: randomLane, hit: false, spawned: false });
+        currentTime += 0.4; // 0.4秒間隔で等間隔に降らせる（カクつきを目立たなくするため）
     }
 }
 
@@ -253,11 +109,9 @@ function resetGameUI() {
     combo = 0;
     document.getElementById('judge-text').innerText = "";
     document.getElementById('combo-text').innerText = "";
-    // 残っているノーツ表示をクリア
     document.querySelectorAll('.note').forEach(n => n.remove());
 }
 
-// 3. ゲームループとアニメーション
 var isPlaying = false;
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.PLAYING) {
@@ -268,24 +122,19 @@ function onPlayerStateChange(event) {
     }
 }
 
-// 判定ラインの位置（上からのpx数）
 var judgeLineTop = 440; 
-var scrollSpeed = 200; // 1秒間に進むピクセル数（スピード調整用）
+var scrollSpeed = 250; 
 
 function updateGame() {
     if (!isPlaying) return;
-
     var currentTime = player.getCurrentTime();
 
     chart.forEach(function(note) {
-        // 判定ラインの手前2秒以内のノーツを画面に登場させる
         if (currentTime >= note.time - 2.0 && !note.spawned && !note.hit) {
             spawnNoteElement(note);
             note.spawned = true;
         }
     });
-
-    // 毎フレーム描画を更新
     requestAnimationFrame(updateGame);
 }
 
@@ -297,16 +146,12 @@ function spawnNoteElement(note) {
 
     function animateNote() {
         if (!isPlaying) {
-            // 一時停止中はアニメーションも待機
             if (!note.hit && noteElement.parentNode) requestAnimationFrame(animateNote);
             return;
         }
 
         var nowTime = player.getCurrentTime();
-        // 時間の差分から現在のノーツの位置(Y座標)を計算
-        var timeDiff = note.time - nowTime; // 判定ジャストなら0秒
-        
-        // Y座標 = 判定ラインの位置 - (判定までの残り時間 * スピード)
+        var timeDiff = note.time - nowTime; 
         var currentTop = judgeLineTop - (timeDiff * scrollSpeed);
 
         if (note.hit) {
@@ -314,14 +159,13 @@ function spawnNoteElement(note) {
             return;
         }
 
-        // 判定ラインを大幅に通り過ぎたらMiss判定
-        if (timeDiff < -0.2) {
+        if (timeDiff < -0.15) {
             noteElement.remove();
             if (!note.hit) {
                 showVerdict("MISS", "#ff4757");
                 combo = 0;
                 document.getElementById('combo-text').innerText = "";
-                note.hit = true; // 処理済みにする
+                note.hit = true;
             }
             return;
         }
@@ -332,33 +176,20 @@ function spawnNoteElement(note) {
     requestAnimationFrame(animateNote);
 }
 
-// 4. キー入力と判定処理
 window.addEventListener('keydown', function(e) {
     var key = e.key.toUpperCase();
     if (['D', 'F', 'J', 'K'].includes(key)) {
         if (!isPlaying) return;
-        
         var currentTime = player.getCurrentTime();
         
-        // 押されたキーのレーンで、まだ叩かれていない一番近いノーツを探す
         var targetNote = chart.find(function(note) {
-            return note.lane === key && !note.hit && Math.abs(note.time - currentTime) < 0.25;
+            return note.lane === key && !note.hit && Math.abs(note.time - currentTime) < 0.2;
         });
 
         if (targetNote) {
-            var diff = Math.abs(targetNote.time - currentTime);
             targetNote.hit = true;
-
-            if (diff < 0.05) {
-                showVerdict("PERFECT", "#00d2d3");
-                combo++;
-            } else if (diff < 0.12) {
-                showVerdict("GREAT", "#00a8ff");
-                combo++;
-            } else {
-                showVerdict("GOOD", "#2ed573");
-                combo++;
-            }
+            showVerdict("PERFECT", "#00d2d3");
+            combo++;
             document.getElementById('combo-text').innerText = combo + " COMBO";
         }
     }
@@ -370,6 +201,5 @@ function showVerdict(text, color) {
     el.style.color = color;
 }
 </script>
-
 </body>
 </html>
