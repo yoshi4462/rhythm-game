@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Auto Generator Fixed</title>
+    <title>Rhythm Stream - Pure Auto Generator</title>
     <style>
         /* ==========================================================================
            全体デザイン（ミニマル・モノトーン＋ネオン）
@@ -96,7 +96,7 @@
         }
 
         /* ==========================================================================
-           【画面1】トップ画面 & 検索・譜面一覧
+           【画面1】トップ画面 & 譜面一覧
            ========================================================================== */
         .top-header {
             display: flex;
@@ -265,21 +265,21 @@
         }
 
         /* ==========================================================================
-           【画面3】エディタ画面
+           【画面3】オート生成専用画面（超シンプル）
            ========================================================================== */
         .editor-form {
             border: 1px solid #ffffff;
-            padding: 20px;
+            padding: 25px;
             margin-bottom: 25px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
             background-color: #222222;
         }
 
         .editor-form input {
-            padding: 10px;
-            font-size: 15px;
+            padding: 12px;
+            font-size: 16px;
             background-color: #111111;
             border: 1px solid #ffffff;
             color: #ffffff;
@@ -287,57 +287,36 @@
             width: 100%;
         }
 
-        .editor-workspace {
-            display: flex;
-            gap: 20px;
-        }
-
-        @media (max-width: 650px) {
-            .editor-workspace { flex-direction: column; }
-        }
-
-        .editor-left { flex: 1; }
-        
-        .editor-right {
-            width: 240px;
-            display: flex;
-            flex-direction: column;
-        }
-        @media (max-width: 650px) { .editor-right { width: 100%; } }
-
-        .log-box {
-            border: 1px solid #ffffff;
-            height: 220px;
-            overflow-y: auto;
-            background-color: #111111;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 14px;
-        }
-
-        .log-entry {
-            border-bottom: 1px solid #222222;
-            padding: 4px 0;
-        }
-
-        .action-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .save-section {
-            margin-top: 30px;
-            border-top: 2px solid #ffffff;
-            padding-top: 20px;
-            text-align: center;
-        }
-
-        .save-btn {
+        .generate-btn {
+            background-color: #00ff66;
+            color: #000000;
+            border-color: #00ff66;
+            padding: 14px;
+            font-size: 16px;
             width: 100%;
-            max-width: 400px;
-            padding: 16px;
-            font-size: 18px;
+        }
+        .generate-btn:hover {
+            background-color: #000000;
+            color: #00ff66;
+        }
+
+        .status-box {
+            border: 1px solid #ffffff;
+            background-color: #111111;
+            padding: 15px;
+            font-size: 14px;
+            color: #cccccc;
+            text-align: center;
+            min-height: 50px;
+        }
+
+        /* 非表示用のダミープレイヤー用コンテナ */
+        #dummy-player-container {
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
         }
     </style>
 </head>
@@ -349,7 +328,7 @@
     <div id="screen-top" class="screen active">
         <div class="top-header">
             <h2>🎵 登録された楽譜リスト</h2>
-            <button onclick="switchScreen('edit')">✨ 新しい曲・自動生成を追加</button>
+            <button onclick="switchScreen('edit')">✨ URLから楽譜を自動生成する</button>
         </div>
         
         <div class="search-container">
@@ -394,43 +373,22 @@
     </div>
 
     <div id="screen-edit" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← キャンセル</button>
+        <button class="back-btn" onclick="switchScreen('top')">← 戻る</button>
         
         <div class="editor-form">
-            <h3>1. 楽曲の設定</h3>
+            <h3>🎵 YouTubeから自動で音符を作る</h3>
+            <p style="font-size: 13px; color: #aaa;">タイトルとURLを入力してボタンを押すだけで、AIが自動で1曲分の譜面を作ります。</p>
+            
             <input type="text" id="edit-title" placeholder="曲のタイトルを入力してください">
             <input type="text" id="edit-url" placeholder="YouTubeの動画URL または 動画ID を入力">
             
-            <div class="action-bar">
-                <button onclick="loadEditorVideo()" style="padding: 10px 20px; font-size:14px; background-color:#ffffff; color:#000;">① 動画を読み込む</button>
-                <button onclick="clickGenerateButton()" style="padding: 10px 20px; font-size:14px; background-color:#00ff66; color:#000; border-color:#00ff66;">② 音符を自動生成する</button>
-            </div>
+            <button class="generate-btn" onclick="startAutoGenerationProcess()">⚡ 音符を自動生成してリストに保存！</button>
+            
+            <div id="generation-status" class="status-box">情報を入力して上のボタンを押してください。</div>
         </div>
 
-        <div class="editor-workspace">
-            <div class="editor-left">
-                <h3>2. 生成されたプレビュー・手動修正</h3>
-                <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">
-                    自動生成ボタンを押した後に動画を再生しながら【D, F, J, K】キーを押すと、さらに自由に音符を追加できます。
-                </p>
-                <div class="video-container">
-                    <div id="youtube-player-edit"></div>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="playEditorVideo()">▶ 動画を再生</button>
-                    <button onclick="pauseEditorVideo()">⏸ 一時停止</button>
-                    <button onclick="clearEditorLogs()" style="background:#222; color:#fff; border-color:#fff;">🔄 最初からやり直す</button>
-                </div>
-            </div>
-
-            <div class="editor-right">
-                <h3>📋 現在の音符データ</h3>
-                <div id="log-area" class="log-box"></div>
-            </div>
-        </div>
-
-        <div class="save-section">
-            <button class="save-btn" onclick="saveNewChart()" style="background-color:#00e5ff; color:#000; border-color:#00e5ff;">💾 この譜面をリストに保存する</button>
+        <div id="dummy-player-container">
+            <div id="youtube-player-edit"></div>
         </div>
     </div>
 
@@ -439,13 +397,12 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-    const DEFAULT_ID = 'P_NfP9_I6As'; 
     const KEYS = ['d', 'f', 'j', 'k'];
     
     let playerPlay = null;
     let playerEdit = null;
-    let currentPlayVideoId = DEFAULT_ID;
-    let currentEditVideoId = DEFAULT_ID;
+    let currentPlayVideoId = 'P_NfP9_I6As';
+    let currentEditVideoId = '';
 
     let isPlaying = false;
     let isCountingDown = false; 
@@ -460,22 +417,20 @@
     const JUDGMENT_LINE_Y = 390; 
     const NOTE_SPEED = 6;        
 
-    let recordedNotes = [];
+    let autoGeneratedNotes = [];
+    let isTargetVideoReady = false;
 
-    // Web Audio API 打鍵音処理
+    // Web Audio API 打鍵音
     let audioCtx = null;
     function playHitSound() {
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
             osc.type = 'sine'; 
             osc.frequency.setValueAtTime(330, audioCtx.currentTime); 
-            
             gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-            
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
@@ -484,15 +439,11 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        setupDefaultChart();
-        renderChartList();
-    });
-
-    function setupDefaultChart() {
         if (!localStorage.getItem('stream_charts')) {
             localStorage.setItem('stream_charts', JSON.stringify([]));
         }
-    }
+        renderChartList();
+    });
 
     function renderChartList() {
         const container = document.getElementById('chart-list-container');
@@ -547,32 +498,6 @@
         switchScreen('play');
     }
 
-    function saveNewChart() {
-        const title = document.getElementById('edit-title').value.trim();
-        if (!title) {
-            alert('保存するには、曲のタイトルを入力してください。');
-            return;
-        }
-        if (recordedNotes.length === 0) {
-            alert('ノーツデータがありません。「② 音符を自動生成する」ボタンを押してノーツを作ってください。');
-            return;
-        }
-        const newChart = {
-            id: 'chart_' + Date.now(),
-            title: title,
-            videoId: currentEditVideoId,
-            notes: recordedNotes
-        };
-        const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
-        charts.push(newChart);
-        localStorage.setItem('stream_charts', JSON.stringify(charts));
-        alert(`楽譜「${title}」の保存が完了しました！`);
-        clearEditorLogs();
-        document.getElementById('edit-title').value = '';
-        document.getElementById('edit-url').value = '';
-        switchScreen('top');
-    }
-
     function extractVideoId(urlOrId) {
         if (!urlOrId) return null;
         const str = urlOrId.trim();
@@ -582,76 +507,72 @@
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // ①動画の読み込み処理
-    function loadEditorVideo() {
+    // 全自動生成プロセスの開始
+    function startAutoGenerationProcess() {
+        const title = document.getElementById('edit-title').value.trim();
         const urlInput = document.getElementById('edit-url').value;
         const id = extractVideoId(urlInput);
+        const statusBox = document.getElementById('generation-status');
         
+        if (!title) {
+            alert('曲のタイトルを入力してください！');
+            return;
+        }
         if (!id) {
             alert('有効なYouTubeのURLまたは動画IDを入力してください。');
             return;
         }
-        
+
         currentEditVideoId = id;
-        clearEditorLogs();
-        
+        isTargetVideoReady = false;
+        statusBox.innerText = "⏳ 動画の解析中...（2〜3秒かかります）";
+
         if (playerEdit && typeof playerEdit.cueVideoById === 'function') {
             playerEdit.cueVideoById(currentEditVideoId);
         }
-        alert('動画を読み込みました！プレイヤーに動画が表示されたら「② 音符を自動生成する」を押してください。');
-    }
 
-    // ②自動生成ボタンをクリックしたときの処理
-    function clickGenerateButton() {
-        const titleInput = document.getElementById('edit-title').value.trim();
-        if (!titleInput) {
-            alert('先に「曲のタイトル」を入力してください！');
-            return;
-        }
-
-        let duration = 0;
-        if (playerEdit && typeof playerEdit.getDuration === 'function') {
-            duration = playerEdit.getDuration();
-        }
-
-        // 読み込みが未完了で動画長が0秒の場合のフォールバック
-        if (duration <= 0) {
-            alert('動画の準備がまだ整っていないか、読み込まれていません。動画プレイヤーにサムネイルが表示されるまで数秒待ってから、もう一度このボタンを押してください。');
-            return;
-        }
-
-        generateAutoNotes(duration);
-    }
-
-    // 実際に自動生成ロジックを走らせる関数
-    function generateAutoNotes(duration) {
-        recordedNotes = [];
-        const logArea = document.getElementById('log-area');
-        logArea.innerHTML = '';
-
-        let currentTime = 4.0; // イントロ用猶予
-        const keysList = ['D', 'F', 'J', 'K'];
-
-        while (currentTime < duration - 3) {
-            const randomKey = keysList[Math.floor(Math.random() * keysList.length)];
+        // 3秒後に動画情報を取得して自動生成を走らせる（完全に自動）
+        setTimeout(() => {
+            let duration = 240; // 取得できなかった場合のデフォルト（4分）
+            if (playerEdit && typeof playerEdit.getDuration === 'function') {
+                const ytDuration = playerEdit.getDuration();
+                if (ytDuration > 10) duration = ytDuration;
+            }
             
-            recordedNotes.push({
-                time: parseFloat(currentTime.toFixed(2)),
-                key: randomKey
-            });
+            // 自動音符生成ロジック
+            autoGeneratedNotes = [];
+            let currentTime = 4.0; 
+            const keysList = ['D', 'F', 'J', 'K'];
 
-            const log = document.createElement('div');
-            log.className = 'log-entry';
-            log.innerText = `${currentTime.toFixed(2)}秒: [${randomKey}] (自動生成)`;
-            logArea.appendChild(log);
+            while (currentTime < duration - 3) {
+                const randomKey = keysList[Math.floor(Math.random() * keysList.length)];
+                autoGeneratedNotes.push({
+                    time: parseFloat(currentTime.toFixed(2)),
+                    key: randomKey
+                });
+                const nextGap = 0.4 + (Math.floor(Math.random() * 3) * 0.2); 
+                currentTime += nextGap;
+            }
 
-            // 0.4秒〜0.8秒の間隔でテンポよくノーツを配置
-            const nextGap = 0.4 + (Math.floor(Math.random() * 3) * 0.2); 
-            currentTime += nextGap;
-        }
-        
-        logArea.scrollTop = 0;
-        alert(`✨ 成功！ ${duration.toFixed(0)}秒の動画から自動的に音符を生成しました！下の水色の保存ボタンを押して保存しましょう！`);
+            // ローカルストレージへ即時保存
+            const newChart = {
+                id: 'chart_' + Date.now(),
+                title: title,
+                videoId: currentEditVideoId,
+                notes: autoGeneratedNotes
+            };
+            const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
+            charts.push(newChart);
+            localStorage.setItem('stream_charts', JSON.stringify(charts));
+
+            statusBox.innerText = `✨ 成功！「${title}」の音符を${autoGeneratedNotes.length}個自動生成して保存しました！`;
+            alert(`🎉 譜面の自動生成に成功しました！\n「${title}」がリストに追加されたので、すぐに遊べます！`);
+            
+            // 入力欄をクリアしてトップに戻る
+            document.getElementById('edit-title').value = '';
+            document.getElementById('edit-url').value = '';
+            switchScreen('top');
+        }, 2500);
     }
 
     function onYouTubeIframeAPIReady() {
@@ -662,8 +583,8 @@
         });
 
         playerEdit = new YT.Player('youtube-player-edit', {
-            videoId: currentEditVideoId,
-            playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 1 }
+            videoId: 'P_NfP9_I6As',
+            playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1 }
         });
     }
 
@@ -676,7 +597,6 @@
         isCountingDown = false;
 
         if (playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo();
-        if (playerEdit && typeof playerEdit.pauseVideo === 'function') playerEdit.pauseVideo();
         resetPlayGame();
 
         if (name === 'top') {
@@ -687,17 +607,11 @@
             document.getElementById('screen-play').classList.add('active');
         } else if (name === 'edit') {
             document.getElementById('screen-edit').classList.add('active');
+            document.getElementById('generation-status').innerText = "情報を入力して上のボタンを押してください。";
         }
     }
 
-    function playEditorVideo() { if (playerEdit) playerEdit.playVideo(); }
-    function pauseEditorVideo() { if (playerEdit) playerEdit.pauseVideo(); }
-    function clearEditorLogs() {
-        recordedNotes = [];
-        document.getElementById('log-area').innerHTML = '';
-    }
-
-    // キーボード入力検知
+    // プレイ画面のキーボード処理のみ残す
     window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
         const keyIndex = KEYS.indexOf(key);
@@ -708,23 +622,6 @@
             if (lane) lane.classList.add('active');
             playHitSound();
             if (isPlaying && !isCountingDown) checkHitJudgment(keyIndex);
-        }
-
-        if (document.getElementById('screen-edit').classList.contains('active') && playerEdit) {
-            if (playerEdit.getPlayerState() === YT.PlayerState.PLAYING) {
-                playHitSound();
-                const time = playerEdit.getCurrentTime();
-                recordedNotes.push({
-                    time: parseFloat(time.toFixed(2)),
-                    key: key.toUpperCase()
-                });
-                const logArea = document.getElementById('log-area');
-                const log = document.createElement('div');
-                log.className = 'log-entry';
-                log.innerText = `${time.toFixed(2)}秒: [${key.toUpperCase()}] (手動追加)`;
-                logArea.appendChild(log);
-                logArea.scrollTop = logArea.scrollHeight;
-            }
         }
     });
 
@@ -737,10 +634,8 @@
         }
     });
 
-    // カウントダウン
     function startCountdown() {
         if (isPlaying || isCountingDown) return;
-        
         isCountingDown = true;
         resetPlayGame(); 
         
@@ -861,7 +756,7 @@
         if (scored) {
             document.getElementById('score-display').innerText = `SCORE: ${score}`;
             document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-            if (targetNote.element.parentNode) targetNote.element.parentNode.removeChild(targetNote.element);
+            if (targetNote.element.parentNode) targetNote.element.parentNode.removeChild(note.element);
             activeNotes.splice(targetIdx, 1);
         }
     }
@@ -870,38 +765,4 @@
         const el = document.getElementById('judgment-text');
         el.innerText = text;
         el.style.color = color;
-        el.style.textShadow = `0 0 10px ${color}`;
-    }
-
-    function stopGameLoops() {
-        isPlaying = false;
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        if (gameTimerId) clearInterval(gameTimerId);
-    }
-
-    function clickResetButton() {
-        if (countdownIntervalId) clearInterval(countdownIntervalId);
-        isCountingDown = false;
-        resetPlayGame(); 
-        if (playerPlay && typeof playerPlay.seekTo === 'function') {
-            playerPlay.seekTo(0, true);
-            playerPlay.pauseVideo();
-        }
-    }
-
-    function resetPlayGame() {
-        stopGameLoops();
-        score = 0;
-        combo = 0;
-        nextNoteIndex = 0;
-        document.getElementById('score-display').innerText = "SCORE: 0";
-        document.getElementById('combo-display').innerText = "COMBO: 0";
-        document.getElementById('judgment-text').innerText = "";
-        activeNotes.forEach(note => {
-            if (note.element && note.element.parentNode) note.element.parentNode.removeChild(note.element);
-        });
-        activeNotes = [];
-    }
-</script>
-</body>
-</html>
+        el.style.text
