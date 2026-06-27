@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream (List Mode)</title>
+    <title>Rhythm Stream - Custom Edition</title>
     <style>
         /* ==========================================================================
-           1. 全体的なデザイン（UI/UX） - 白と黒を基調としたシンプルなデザイン
+           全体デザイン（ミニマル・モノトーン）
            ========================================================================== */
         * {
             box-sizing: border-box;
@@ -30,25 +30,25 @@
             max-width: 800px;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
 
         h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 26px;
             text-align: center;
+            margin-bottom: 20px;
             letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
         button {
             background-color: #000000;
             color: #ffffff;
             border: 1px solid #000000;
-            padding: 10px 20px;
+            padding: 12px 24px;
             font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
-            margin: 5px;
         }
 
         button:hover {
@@ -60,25 +60,22 @@
             display: none;
             width: 100%;
             flex-direction: column;
-            align-items: center;
         }
 
         .screen.active {
             display: flex;
         }
 
-        .notice-box {
-            background-color: #fffde7;
-            border: 1px solid #fff59d;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
-            width: 100%;
+        .back-btn {
+            background-color: #ffffff;
+            color: #000000;
+            align-self: flex-start;
+            margin-bottom: 20px;
+            padding: 8px 16px;
             font-size: 14px;
-            line-height: 1.6;
-            color: #333333;
         }
 
+        /* YouTube埋め込みレスポンシブ対応 */
         .video-container {
             position: relative;
             width: 100%;
@@ -97,194 +94,303 @@
         }
 
         /* ==========================================================================
-           譜面一覧（選択リスト）のスタイル
+           【画面1】トップ画面 & 譜面一覧
            ========================================================================== */
-        .chart-list-section {
-            width: 100%;
-            margin-top: 25px;
-            border-top: 1px solid #000;
-            padding-top: 20px;
-        }
-
-        .chart-list {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .chart-item {
-            border: 1px solid #000;
-            padding: 15px;
+        .top-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #ffffff;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 15px;
         }
 
-        .chart-info h4 {
-            font-size: 16px;
-            margin-bottom: 4px;
+        .top-header h2 { font-size: 20px; }
+
+        .chart-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chart-item {
+            border: 1px solid #000000;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+        }
+
+        .chart-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
         }
 
         .chart-info p {
-            font-size: 12px;
-            color: #666;
+            font-size: 13px;
+            color: #666666;
         }
 
-        .chart-actions {
+        .chart-btns {
             display: flex;
-            gap: 5px;
+            gap: 10px;
         }
 
-        /* フォーム入力 */
-        .input-group {
-            width: 100%;
+        .delete-btn {
+            background-color: #ffffff;
+            color: #ff0000;
+            border-color: #ff0000;
+        }
+        .delete-btn:hover {
+            background-color: #ff0000;
+            color: #ffffff;
+        }
+
+        /* ==========================================================================
+           【画面2】プレイ画面（ゲーム盤面）
+           ========================================================================== */
+        .play-layout {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-bottom: 15px;
+            align-items: center;
+            width: 100%;
         }
 
-        .input-group input {
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #000;
-            outline: none;
-        }
-
-        /* ゲーム画面用 */
         .game-status {
             display: flex;
             justify-content: space-between;
             width: 100%;
             max-width: 400px;
-            margin-bottom: 10px;
+            font-size: 18px;
             font-weight: bold;
+            margin-bottom: 10px;
         }
 
         .game-board {
             position: relative;
             width: 100%;
             max-width: 400px;
-            height: 400px;
+            height: 450px;
             border: 2px solid #000000;
             background-color: #ffffff;
             overflow: hidden;
         }
 
-        .lanes { display: flex; width: 100%; height: 100%; }
-        .lane { flex: 1; border-right: 1px dashed #cccccc; position: relative; height: 100%; }
+        .lanes {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .lane {
+            flex: 1;
+            border-right: 1px dashed #dddddd;
+            position: relative;
+            height: 100%;
+        }
+
         .lane:last-child { border-right: none; }
-        .judgment-line { position: absolute; bottom: 50px; width: 100%; height: 2px; background-color: #000000; z-index: 5; }
-        .key-label { position: absolute; bottom: 10px; width: 100%; text-align: center; font-weight: bold; font-size: 16px; color: #666666; }
         .lane.active { background-color: #f0f0f0; }
-        .note { position: absolute; width: 40px; height: 40px; background-color: #000000; border-radius: 50%; left: calc(50% - 20px); z-index: 3; transform: translateY(-20px); }
-        .judgment-text { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 28px; font-weight: bold; pointer-events: none; z-index: 10; height: 35px; }
-        .controls { margin-top: 15px; display: flex; gap: 10px; }
-        .editor-layout { display: flex; flex-direction: column; width: 100%; gap: 20px; }
-        .editor-workspace { display: flex; gap: 20px; width: 100%; }
-        @media (max-width: 600px) { .editor-workspace { flex-direction: column; } }
+
+        .judgment-line {
+            position: absolute;
+            bottom: 60px;
+            width: 100%;
+            height: 3px;
+            background-color: #000000;
+            z-index: 5;
+        }
+
+        .key-label {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #000000;
+        }
+
+        .note {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            background-color: #000000;
+            border-radius: 50%;
+            left: calc(50% - 21px);
+            z-index: 3;
+            transform: translateY(-21px);
+        }
+
+        .judgment-text {
+            position: absolute;
+            top: 35%;
+            width: 100%;
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            height: 40px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .play-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        /* ==========================================================================
+           【画面3】作製・編集画面（エディタ）
+           ========================================================================== */
+        .editor-form {
+            border: 1px solid #000000;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .editor-form input {
+            padding: 10px;
+            font-size: 15px;
+            border: 1px solid #000000;
+            outline: none;
+            width: 100%;
+        }
+
+        .editor-workspace {
+            display: flex;
+            gap: 20px;
+        }
+
+        @media (max-width: 650px) {
+            .editor-workspace { flex-direction: column; }
+        }
+
         .editor-left { flex: 1; }
-        .editor-right { width: 250px; display: flex; flex-direction: column; }
-        @media (max-width: 600px) { .editor-right { width: 100%; } }
-        .log-area { border: 1px solid #000000; height: 200px; overflow-y: scroll; background: #fafafa; padding: 10px; font-family: monospace; font-size: 13px; }
-        .log-item { border-bottom: 1px solid #eeeeee; padding: 4px 0; }
-        .back-btn { align-self: flex-start; margin-bottom: 15px; background-color: #ffffff; color: #000000; }
+        
+        .editor-right {
+            width: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+        @media (max-width: 650px) { .editor-right { width: 100%; } }
+
+        .log-box {
+            border: 1px solid #000000;
+            height: 220px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .log-entry {
+            border-bottom: 1px solid #eeeeee;
+            padding: 4px 0;
+        }
+
+        .save-section {
+            margin-top: 30px;
+            border-top: 2px solid #000000;
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .save-btn {
+            width: 100%;
+            max-width: 400px;
+            padding: 16px;
+            font-size: 18px;
+            background-color: #000000;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Rhythm Tap Stream</h1>
-
-    <div id="shared-notice" class="notice-box">
-        <h3>⚠️ 利用者のみなさまへのお願い（注意事項）</h3>
-        <ul>
-            <li>1. ゲーム作成・プレイの際は、「公式動画」のURLをご利用ください。</li>
-            <li>2. 違法アップロードされた動画のURLは絶対に使用しないでください。</li>
-        </ul>
-    </div>
+    <h1>Rhythm Stream</h1>
 
     <div id="screen-top" class="screen active">
-        <div style="text-align: center; margin-bottom: 10px;">
-            <p>自分で譜面を作るか、以下の一覧から譜面を選んで遊んでください！</p>
+        <div class="top-header">
+            <h2>🎵 登録された楽譜リスト</h2>
+            <button onclick="switchScreen('edit')">✨ 新しい譜面を打ち込む</button>
         </div>
-        <button onclick="switchScreen('edit')" style="padding: 15px 30px; font-size: 18px;">✨ 新しい譜面を作る</button>
-
-        <div class="chart-list-section">
-            <h3>🎵 登録されている譜面一覧</h3>
-            <div id="chart-list-container" class="chart-list">
-                </div>
-        </div>
+        <div id="chart-list-container" class="chart-list">
+            </div>
     </div>
 
     <div id="screen-play" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← 一覧へ戻る</button>
-        <h3 id="playing-title" style="margin-bottom: 15px;">演奏中: -</h3>
+        <button class="back-btn" onclick="switchScreen('top')">← 一覧リストに戻る</button>
         
-        <div class="video-container">
-            <div id="youtube-player-play"></div>
-        </div>
-
-        <div class="game-status">
-            <div id="score-display">SCORE: 0</div>
-            <div id="combo-display">COMBO: 0</div>
-        </div>
-
-        <div class="game-board">
-            <div id="judgment-text" class="judgment-text"></div>
-            <div class="judgment-line"></div>
+        <div class="play-layout">
+            <h2 id="play-song-title" style="margin-bottom: 15px; text-align: center;">-</h2>
             
-            <div class="lanes">
-                <div class="lane" id="lane-play-0"><span class="key-label">D</span></div>
-                <div class="lane" id="lane-play-1"><span class="key-label">F</span></div>
-                <div class="lane" id="lane-play-2"><span class="key-label">J</span></div>
-                <div class="lane" id="lane-play-3"><span class="key-label">K</span></div>
+            <div class="video-container">
+                <div id="youtube-player-play"></div>
             </div>
-        </div>
 
-        <div class="controls">
-            <button id="btn-play-start" onclick="startPlayGame()">曲を再生してスタート</button>
-            <button onclick="resetPlayGame()">リセット</button>
+            <div class="game-status">
+                <div id="score-display">SCORE: 0</div>
+                <div id="combo-display">COMBO: 0</div>
+            </div>
+
+            <div class="game-board">
+                <div id="judgment-text" class="judgment-text"></div>
+                <div class="judgment-line"></div>
+                <div class="lanes">
+                    <div class="lane" id="lane-play-0"><span class="key-label">D</span></div>
+                    <div class="lane" id="lane-play-1"><span class="key-label">F</span></div>
+                    <div class="lane" id="lane-play-2"><span class="key-label">J</span></div>
+                    <div class="lane" id="lane-play-3"><span class="key-label">K</span></div>
+                </div>
+            </div>
+
+            <div class="play-controls">
+                <button id="btn-play-start" onclick="startPlayGame()">▶ 曲を再生してスタート</button>
+                <button onclick="resetPlayGame()">🔄 リセット</button>
+            </div>
         </div>
     </div>
 
     <div id="screen-edit" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← キャンセルして戻る</button>
+        <button class="back-btn" onclick="switchScreen('top')">← 作成をキャンセル</button>
         
-        <div style="width:100%; border:1px solid #000; padding:15px; margin-bottom:20px;">
-            <h4>1. 新しく作る曲の情報を入力して動画を読み込む</h4>
-            <div class="input-group" style="margin-top:10px;">
-                <input type="text" id="edit-title-input" placeholder="曲のタイトル（例：CHARM）">
-                <input type="text" id="edit-url-input" placeholder="YouTubeのURLまたは動画ID（空欄なら初期MVになります）">
-                <button onclick="loadEditorVideo()" style="align-self: flex-start; margin: 5px 0 0 0;">動画を読み込む</button>
+        <div class="editor-form">
+            <h3>1. 楽曲の設定</h3>
+            <input type="text" id="edit-title" placeholder="曲のタイトルを入力してください（例: CHARM）">
+            <input type="text" id="edit-url" placeholder="YouTubeの動画URL または 動画ID を入力">
+            <button onclick="loadEditorVideo()" style="align-self: flex-start; padding: 8px 16px; font-size:14px;">動画を読み込む</button>
+        </div>
+
+        <div class="editor-workspace">
+            <div class="editor-left">
+                <h3>2. 打ち込み</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
+                    動画再生中にリズムに合わせてキーボードの【D, F, J, K】を押すと、自動的にそのタイミングが記録されます。
+                </p>
+                <div class="video-container">
+                    <div id="youtube-player-edit"></div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="playEditorVideo()">▶ 動画を再生</button>
+                    <button onclick="pauseEditorVideo()">⏸ 一時停止</button>
+                    <button onclick="clearEditorLogs()" style="background:#fff; color:#000;">🔄 やり直す</button>
+                </div>
+            </div>
+
+            <div class="editor-right">
+                <h3>📋 リアルタイムログ</h3>
+                <div id="log-area" class="log-box"></div>
             </div>
         </div>
 
-        <div class="editor-layout">
-            <h4>2. 動画を再生して、リズムに合わせてD,F,J,Kを押す</h4>
-            <div class="editor-workspace">
-                <div class="editor-left">
-                    <div class="video-container">
-                        <div id="youtube-player-edit"></div>
-                    </div>
-                    <div class="controls">
-                        <button id="btn-edit-start" onclick="startEditGame()">動画を再生</button>
-                        <button onclick="pauseEditGame()">一時停止（保存はここ）</button>
-                        <button onclick="clearEditLogs()">やり直す（ログ消去）</button>
-                    </div>
-                </div>
-
-                <div class="editor-right">
-                    <h4 style="margin-bottom: 5px; font-size:14px;">タップ記録ログ</h4>
-                    <div id="log-area" class="log-area"></div>
-                </div>
-            </div>
-
-            <div style="width: 100%; border-top: 1px solid #000; padding-top: 15px; text-align: center;">
-                <button onclick="saveCurrentChart()" style="background:#000; color:#fff; padding:15px 30px; font-size:16px;">💾 この譜面を自動保存して一覧に登録する</button>
-            </div>
+        <div class="save-section">
+            <button class="save-btn" onclick="saveNewChart()">💾 譜面を完成させて一覧に保存する</button>
         </div>
     </div>
 
@@ -293,251 +399,246 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-    // デフォルト曲 (WANIMA - CHARM)
-    const DEFAULT_VIDEO_ID = 'P_NfP9_I6As';
+    // 定数・グローバル変数
+    const DEFAULT_ID = 'P_NfP9_I6As'; // 初期表示用 (WANIMA)
     const KEYS = ['d', 'f', 'j', 'k'];
     
     let playerPlay = null;
     let playerEdit = null;
+    let currentPlayVideoId = DEFAULT_ID;
+    let currentEditVideoId = DEFAULT_ID;
 
-    // 現在選択中・編集中の動画ID
-    let activePlayVideoId = DEFAULT_VIDEO_ID;
-    let activeEditVideoId = DEFAULT_VIDEO_ID;
-
-    // ゲーム用変数
+    // ゲーム用コア変数
     let isPlaying = false;
     let score = 0;
     let combo = 0;
     let activeNotes = [];
-    let loadedChartNotes = []; 
-    let nextNoteIndex = 0;    
-    let playTimerId = null;   
-    const JUDGMENT_LINE_Y = 350;
-    const NOTE_SPEED = 5; 
+    let loadedChartNotes = [];
+    let nextNoteIndex = 0;
+    let gameTimerId = null;
     let animationFrameId = null;
+    const JUDGMENT_LINE_Y = 390; // 判定線の位置
+    const NOTE_SPEED = 6;        // ノーツが落ちる速度
 
-    // エディタ用変数
+    // 打ち込み用変数
     let recordedNotes = [];
 
-    // 初期化時、またはページ読み込み時に一覧を表示
+    // 起動時にLocalStorageからデータを読み込んでリスト表示
     window.addEventListener('DOMContentLoaded', () => {
-        initDefaultCharts(); // 初回のみサンプル譜面を登録
+        setupDefaultChart();
         renderChartList();
     });
 
-    // ==========================================================================
-    // LocalStorageを使った譜面管理
-    // ==========================================================================
-    function initDefaultCharts() {
-        if (!localStorage.getItem('rhythm_charts')) {
-            // 初期状態のサンプル（空の譜面データとしてWANIMAを登録しておく）
-            const defaultCharts = [
-                {
-                    id: 'default_1',
-                    title: 'CHARM (サンプル・ランダム生成で遊べます)',
-                    videoId: DEFAULT_VIDEO_ID,
-                    notes: [] // 空の場合はランダム生成
-                }
-            ];
-            localStorage.setItem('rhythm_charts', JSON.stringify(defaultCharts));
+    // 最初にサンプル用として1曲登録しておく処理
+    function setupDefaultChart() {
+        if (!localStorage.getItem('stream_charts')) {
+            const sample = [{
+                id: 'sample_default',
+                title: 'CHARM (サンプル楽譜)',
+                videoId: DEFAULT_ID,
+                notes: [
+                    { time: 1.5, key: 'D' }, { time: 2.0, key: 'F' }, 
+                    { time: 2.5, key: 'J' }, { time: 3.0, key: 'K' },
+                    { time: 4.0, key: 'F' }, { time: 4.5, key: 'J' }
+                ]
+            }];
+            localStorage.setItem('stream_charts', JSON.stringify(sample));
         }
     }
 
-    // 譜面一覧を画面に描画する
+    // ==========================================================================
+    // 譜面データの管理（LocalStorage）
+    // ==========================================================================
     function renderChartList() {
         const container = document.getElementById('chart-list-container');
         container.innerHTML = '';
 
-        const charts = JSON.parse(localStorage.getItem('rhythm_charts')) || [];
+        const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
 
         if (charts.length === 0) {
-            container.innerHTML = '<p style="color:#666; font-size:14px;">登録された譜面がありません。「新しい譜面を作る」から作成してください。</p>';
+            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">登録されている楽譜がありません。右上のボタンから作ってみましょう！</p>';
             return;
         }
 
-        charts.forEach((chart, index) => {
+        charts.forEach(chart => {
             const item = document.createElement('div');
             item.className = 'chart-item';
-            
-            const noteCountText = chart.notes.length > 0 ? `${chart.notes.length} ノーツ` : 'データなし(ランダム生成)';
-
             item.innerHTML = `
                 <div class="chart-info">
-                    <h4>${chart.title}</h4>
-                    <p>動画ID: ${chart.videoId} / ${noteCountText}</p>
+                    <h3>${chart.title}</h3>
+                    <p>動画ID: ${chart.videoId} / 総ノーツ数: ${chart.notes.length}</p>
                 </div>
-                <div class="chart-actions">
-                    <button onclick="selectAndPlayChart('${chart.id}')">▶ 遊ぶ</button>
-                    <button onclick="deleteChart('${chart.id}')" style="background:#fff; color:#000; font-size:12px; padding:5px 10px;">削除</button>
+                <div class="chart-btns">
+                    <button onclick="loadAndPlayChart('${chart.id}')">▶ 遊ぶ</button>
+                    <button class="delete-btn" onclick="deleteChart('${chart.id}')">削除</button>
                 </div>
             `;
             container.appendChild(item);
         });
     }
 
-    // 譜面を削除する関数
     function deleteChart(id) {
-        if (!confirm('この譜面を削除してもよろしいですか？')) return;
-        let charts = JSON.parse(localStorage.getItem('rhythm_charts')) || [];
+        if (!confirm('この楽譜を削除してもよろしいですか？')) return;
+        let charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
         charts = charts.filter(c => c.id !== id);
-        localStorage.setItem('rhythm_charts', JSON.stringify(charts));
+        localStorage.setItem('stream_charts', JSON.stringify(charts));
         renderChartList();
     }
 
-    // 一覧から譜面を選んでゲーム画面へ進む
-    function selectAndPlayChart(id) {
-        const charts = JSON.parse(localStorage.getItem('rhythm_charts')) || [];
-        const selected = charts.find(c => c.id === id);
-        
-        if (!selected) return;
+    function loadAndPlayChart(id) {
+        const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
+        const target = charts.find(c => c.id === id);
+        if (!target) return;
 
-        // プレイモード用の設定に反映
-        document.getElementById('playing-title').innerText = `演奏中: ${selected.title}`;
-        activePlayVideoId = selected.videoId;
-        loadedChartNotes = selected.notes || [];
+        document.getElementById('play-song-title').innerText = `🎵 演奏中：${target.title}`;
+        currentPlayVideoId = target.videoId;
+        // 時間軸の昇順（早い順）にソートして読み込み
+        loadedChartNotes = target.notes.sort((a, b) => a.time - b.time);
 
-        // プレイヤーに動画をセット
         if (playerPlay && typeof playerPlay.cueVideoById === 'function') {
-            playerPlay.cueVideoById(activePlayVideoId);
+            playerPlay.cueVideoById(currentPlayVideoId);
         }
-
         switchScreen('play');
     }
 
-    // エディタ側で「一時停止」や「保存ボタン」を押した時に呼び出す保存処理
-    function saveCurrentChart() {
-        const titleInput = document.getElementById('edit-title-input').value.trim();
-        if (!titleInput) {
-            alert('保存するには、先に「曲のタイトル」を入力してください！');
+    // TypingTube風 完成・自動保存ボタン
+    function saveNewChart() {
+        const title = document.getElementById('edit-title').value.trim();
+        if (!title) {
+            alert('楽譜を保存するには、曲のタイトルを最初に入力してください。');
             return;
         }
-
         if (recordedNotes.length === 0) {
-            alert('ノーツ（記録データ）が1つもありません。動画を再生中にD,F,J,Kを押してリズムを叩いてください。');
+            alert('ノーツデータがありません。動画を再生しながらD, F, J, Kキーを押してリズムを打ち込んでください。');
             return;
         }
 
         const newChart = {
             id: 'chart_' + Date.now(),
-            title: titleInput,
-            videoId: activeEditVideoId,
+            title: title,
+            videoId: currentEditVideoId,
             notes: recordedNotes
         };
 
-        const charts = JSON.parse(localStorage.getItem('rhythm_charts')) || [];
+        const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
         charts.push(newChart);
-        localStorage.setItem('rhythm_charts', JSON.stringify(charts));
+        localStorage.setItem('stream_charts', JSON.stringify(charts));
 
-        alert(`譜面「${titleInput}」を自動保存し、一覧に登録しました！`);
+        alert(`楽譜「${title}」の保存が完了しました！トップ一覧に追加されます。`);
         
-        // ログをクリアしてトップに戻る
-        clearEditLogs();
-        document.getElementById('edit-title-input').value = '';
-        document.getElementById('edit-url-input').value = '';
-        renderChartList();
+        // 入力フォームとログを綺麗に初期化
+        clearEditorLogs();
+        document.getElementById('edit-title').value = '';
+        document.getElementById('edit-url').value = '';
+        
         switchScreen('top');
     }
 
     // ==========================================================================
-    // YouTube URL 解析・読み込み
+    // YouTube API 関連
     // ==========================================================================
     function extractVideoId(urlOrId) {
         if (!urlOrId) return null;
-        const trimmed = urlOrId.trim();
-        if (trimmed.length === 11 && !trimmed.includes('/') && !trimmed.includes('=')) return trimmed;
+        const str = urlOrId.trim();
+        if (str.length === 11 && !str.includes('/') && !str.includes('=')) return str;
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = trimmed.match(regExp);
+        const match = str.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
     function loadEditorVideo() {
-        const urlInput = document.getElementById('edit-url-input').value;
-        if (!urlInput) {
-            activeEditVideoId = DEFAULT_VIDEO_ID;
-            alert('URLが空欄のため、デフォルトの動画を読み込みます。');
-        } else {
-            const id = extractVideoId(urlInput);
-            if (!id) {
-                alert('有効なURLまたは動画IDが見つかりませんでした。');
-                return;
-            }
-            activeEditVideoId = id;
+        const urlInput = document.getElementById('edit-url').value;
+        const id = extractVideoId(urlInput);
+        if (!id) {
+            alert('有効なYouTubeのURLまたは動画IDを入力してください。');
+            return;
         }
-        
-        clearEditLogs();
+        currentEditVideoId = id;
+        clearEditorLogs();
         if (playerEdit && typeof playerEdit.cueVideoById === 'function') {
-            playerEdit.cueVideoById(activeEditVideoId);
+            playerEdit.cueVideoById(currentEditVideoId);
         }
-        alert('エディタ用の動画を読み込みました！');
+        alert('新しく動画を読み込みました！');
     }
 
-    // API呼び出し
     function onYouTubeIframeAPIReady() {
         playerPlay = new YT.Player('youtube-player-play', {
-            videoId: activePlayVideoId,
+            videoId: currentPlayVideoId,
             playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 1 },
             events: { 'onStateChange': onPlayerPlayStateChange }
         });
 
         playerEdit = new YT.Player('youtube-player-edit', {
-            videoId: activeEditVideoId,
+            videoId: currentEditVideoId,
             playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 1 }
         });
     }
 
-    function switchScreen(screenName) {
+    function switchScreen(name) {
         document.getElementById('screen-top').classList.remove('active');
         document.getElementById('screen-play').classList.remove('active');
         document.getElementById('screen-edit').classList.remove('active');
 
-        if(playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo();
-        if(playerEdit && typeof playerEdit.pauseVideo === 'function') playerEdit.pauseVideo();
+        if (playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo();
+        if (playerEdit && typeof playerEdit.pauseVideo === 'function') playerEdit.pauseVideo();
         resetPlayGame();
 
-        if (screenName === 'top') {
+        if (name === 'top') {
             document.getElementById('screen-top').classList.add('active');
-            renderChartList(); // トップに戻るたび一覧を再描画
+            renderChartList();
+        } else if (name === 'play') {
+            document.getElementById('screen-play').classList.add('active');
+        } else if (name === 'edit') {
+            document.getElementById('screen-edit').classList.add('active');
         }
-        else if (screenName === 'play') document.getElementById('screen-play').classList.add('active');
-        else if (screenName === 'edit') document.getElementById('screen-edit').classList.add('active');
     }
 
     // ==========================================================================
-    // キー入力とゲームコアロジック
+    // リアルタイム打ち込み（エディタ）システム
     // ==========================================================================
-    window.addEventListener('keydown', function(e) {
+    function playEditorVideo() { if (playerEdit) playerEdit.playVideo(); }
+    function pauseEditorVideo() { if (playerEdit) playerEdit.pauseVideo(); }
+    function clearEditorLogs() {
+        recordedNotes = [];
+        document.getElementById('log-area').innerHTML = '';
+    }
+
+    // ==========================================================================
+    // キーボード入力の検知（プレイ＆エディタ共通）
+    // ==========================================================================
+    window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
         const keyIndex = KEYS.indexOf(key);
         if (keyIndex === -1) return;
 
+        // 1. プレイ中の処理
         if (document.getElementById('screen-play').classList.contains('active')) {
             const lane = document.getElementById(`lane-play-${keyIndex}`);
             if (lane) lane.classList.add('active');
-            if (isPlaying) checkJudgment(keyIndex);
+            if (isPlaying) checkHitJudgment(keyIndex);
         }
 
-        if (document.getElementById('screen-edit').classList.contains('active')) {
-            if (playerEdit && typeof playerEdit.getCurrentTime === 'function') {
-                const state = playerEdit.getPlayerState();
-                if (state === YT.PlayerState.PLAYING) {
-                    const currentTime = playerEdit.getCurrentTime();
-                    recordedNotes.push({
-                        time: parseFloat(currentTime.toFixed(2)),
-                        key: key.toUpperCase()
-                    });
-                    
-                    const logArea = document.getElementById('log-area');
-                    const logItem = document.createElement('div');
-                    logItem.className = 'log-item';
-                    logItem.innerText = `${currentTime.toFixed(2)}秒：${key.toUpperCase()}`;
-                    logArea.appendChild(logItem);
-                    logArea.scrollTop = logArea.scrollHeight;
-                }
+        // 2. 打ち込み中（エディタ）の処理
+        if (document.getElementById('screen-edit').classList.contains('active') && playerEdit) {
+            if (playerEdit.getPlayerState() === YT.PlayerState.PLAYING) {
+                const time = playerEdit.getCurrentTime();
+                recordedNotes.push({
+                    time: parseFloat(time.toFixed(2)),
+                    key: key.toUpperCase()
+                });
+
+                // 画面右側に打ち込みログを表示
+                const logArea = document.getElementById('log-area');
+                const log = document.createElement('div');
+                log.className = 'log-entry';
+                log.innerText = `${time.toFixed(2)}秒: [${key.toUpperCase()}]`;
+                logArea.appendChild(log);
+                logArea.scrollTop = logArea.scrollHeight; // 最下部へスクロール
             }
         }
     });
 
-    window.addEventListener('keyup', function(e) {
+    window.addEventListener('keyup', (e) => {
         const key = e.key.toLowerCase();
         const keyIndex = KEYS.indexOf(key);
         if (keyIndex !== -1) {
@@ -546,8 +647,12 @@
         }
     });
 
+    // ==========================================================================
+    // ゲームプレイ用の進行ロジック
+    // ==========================================================================
     function startPlayGame() {
         if (!playerPlay) return;
+        resetPlayGame();
         playerPlay.playVideo();
     }
 
@@ -555,32 +660,29 @@
         if (event.data === YT.PlayerState.PLAYING) {
             if (!isPlaying) {
                 isPlaying = true;
-                animationFrameId = requestAnimationFrame(updateGame);
-                
-                if (loadedChartNotes.length > 0) {
-                    // 自作譜面を流す設定
-                    nextNoteIndex = 0;
-                    playTimerId = setInterval(checkAndSpawnCustomNotes, 20);
-                } else {
-                    // サンプル等のためのランダム生成
-                    playTimerId = setInterval(generateAutoNote, 1000);
-                }
+                nextNoteIndex = 0;
+                animationFrameId = requestAnimationFrame(gameRenderLoop);
+                gameTimerId = setInterval(checkSpawnNotes, 20); // 20ms感覚で緻密にチェック
             }
         } else {
             stopGameLoops();
         }
     }
 
-    function checkAndSpawnCustomNotes() {
+    function checkSpawnNotes() {
         if (!isPlaying || !playerPlay) return;
         const currentTime = playerPlay.getCurrentTime();
-        const fallLag = (JUDGMENT_LINE_Y / NOTE_SPEED) / 60; 
+        
+        // ノーツが上から判定線に到達するまでの時間（ラグ落下の相殺計算）
+        const fallLag = (JUDGMENT_LINE_Y / NOTE_SPEED) / 60;
 
         while (nextNoteIndex < loadedChartNotes.length) {
             const noteData = loadedChartNotes[nextNoteIndex];
             if (currentTime >= (noteData.time - fallLag)) {
-                const laneIndex = KEYS.indexOf(noteData.key.toLowerCase());
-                if (laneIndex !== -1) createNoteElement(laneIndex);
+                const laneIdx = KEYS.indexOf(noteData.key.toLowerCase());
+                if (laneIdx !== -1) {
+                    spawnNoteElement(laneIdx);
+                }
                 nextNoteIndex++;
             } else {
                 break;
@@ -588,10 +690,89 @@
         }
     }
 
+    function spawnNoteElement(laneIndex) {
+        const lane = document.getElementById(`lane-play-${laneIndex}`);
+        if (!lane) return;
+        const element = document.createElement('div');
+        element.className = 'note';
+        element.style.top = '0px';
+        lane.appendChild(element);
+
+        activeNotes.push({
+            lane: laneIndex,
+            y: 0,
+            element: element
+        });
+    }
+
+    function gameRenderLoop() {
+        if (!isPlaying) return;
+
+        for (let i = activeNotes.length - 1; i >= 0; i--) {
+            const note = activeNotes[i];
+            note.y += NOTE_SPEED;
+            note.element.style.top = note.y + 'px';
+
+            // 判定線を完全に通り過ぎてスルーした場合 (Miss)
+            if (note.y > JUDGMENT_LINE_Y + 40) {
+                updateJudgmentUI("Miss", "#888888");
+                combo = 0;
+                document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
+                
+                if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
+                activeNotes.splice(i, 1);
+            }
+        }
+        animationFrameId = requestAnimationFrame(gameRenderLoop);
+    }
+
+    function checkHitJudgment(laneIndex) {
+        let targetIdx = -1;
+        let lowestY = -1;
+
+        // 押されたレーンの中で、一番判定線に近い（一番下にある）ノーツを探す
+        for (let i = 0; i < activeNotes.length; i++) {
+            if (activeNotes[i].lane === laneIndex && activeNotes[i].y > lowestY) {
+                lowestY = activeNotes[i].y;
+                targetIdx = i;
+            }
+        }
+
+        if (targetIdx === -1) return;
+
+        const targetNote = activeNotes[targetIdx];
+        const diff = Math.abs(targetNote.y - JUDGMENT_LINE_Y);
+        let scored = false;
+
+        if (diff <= 16) {
+            updateJudgmentUI("Perfect!", "#000000");
+            score += 100; combo++; scored = true;
+        } else if (diff <= 36) {
+            updateJudgmentUI("Great!", "#333333");
+            score += 50; combo++; scored = true;
+        } else if (diff <= 56) {
+            updateJudgmentUI("Good", "#666666");
+            score += 20; combo++; scored = true;
+        }
+
+        if (scored) {
+            document.getElementById('score-display').innerText = `SCORE: ${score}`;
+            document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
+            if (targetNote.element.parentNode) targetNote.element.parentNode.removeChild(targetNote.element);
+            activeNotes.splice(targetIdx, 1);
+        }
+    }
+
+    function updateJudgmentUI(text, color) {
+        const el = document.getElementById('judgment-text');
+        el.innerText = text;
+        el.style.color = color;
+    }
+
     function stopGameLoops() {
         isPlaying = false;
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        if (playTimerId) clearInterval(playTimerId);
+        if (gameTimerId) clearInterval(gameTimerId);
     }
 
     function resetPlayGame() {
@@ -604,1270 +785,11 @@
         document.getElementById('judgment-text').innerText = "";
         
         activeNotes.forEach(note => {
-            if(note.element && note.element.parentNode) note.element.parentNode.removeChild(note.element);
-        });
-        activeNotes = [];
-    }
-
-    function generateAutoNote() {
-        const randomLane = Math.floor(Math.random() * 4);
-        createNoteElement(randomLane);
-    }
-
-    function createNoteElement(laneIndex) {
-        const laneElement = document.getElementById(`lane-play-${laneIndex}`);
-        if (!laneElement) return;
-        const noteElement = document.createElement('div');
-        noteElement.className = 'note';
-        noteElement.style.top = '0px';
-        laneElement.appendChild(noteElement);
-
-        activeNotes.push({ lane: laneIndex, y: 0, element: noteElement });
-    }
-
-    function updateGame() {
-        if (!isPlaying) return;
-        for (let i = activeNotes.length - 1; i >= 0; i--) {
-            const note = activeNotes[i];
-            note.y += NOTE_SPEED;
-            note.element.style.top = note.y + 'px';
-
-            if (note.y > JUDGMENT_LINE_Y + 40) {
-                showJudgmentText("Miss", "#666666");
-                combo = 0;
-                document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-                if(note.element.parentNode) note.element.parentNode.removeChild(note.element);
-                activeNotes.splice(i, 1);
-            }
-        }
-        animationFrameId = requestAnimationFrame(updateGame);
-    }
-
-    function checkJudgment(laneIndex) {
-        let targetNoteIndex = -1;
-        let maxPercentY = -1;
-        for (let i = 0; i < activeNotes.length; i++) {
-            if (activeNotes[i].lane === laneIndex && activeNotes[i].y > maxPercentY) {
-                maxPercentY = activeNotes[i].y;
-                targetNoteIndex = i;
-            }
-        }
-        if (targetNoteIndex === -1) return;
-
-        const targetNote = activeNotes[targetNoteIndex];
-        const diff = Math.abs(targetNote.y - JUDGMENT_LINE_Y);
-        let judged = false;
-
-        if (diff <= 15) { showJudgmentText("Perfect!", "#000000"); score += 100; combo++; judged = true; }
-        else if (diff <= 35) { showJudgmentText("Great!", "#333333"); score += 50; combo++; judged = true; }
-        else if (diff <= 55) { showJudgmentText("Good", "#555555"); score += 20; combo++; judged = true; }
-
-        if (judged) {
-            document.getElementById('score-display').innerText = `SCORE: ${score}`;
-            document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-            if(targetNote.element.parentNode) targetNote.element.parentNode.removeChild(targetNote.element);
-            activeNotes.splice(targetNoteIndex, 1);
-        }
-    }
-
-    function showJudgmentText(text, color) {
-        const el = document.getElementById('judgment-text');
-        el.innerText = text;
-        el.style.color = color;
-    }
-
-    // ==========================================================================
-    // エディタロジック
-    // ==========================================================================
-    function startEditGame() { if (playerEdit) playerEdit.playVideo(); }
-    function pauseEditGame() { if (playerEdit) playerEdit.pauseVideo(); }
-    function clearEditLogs() {
-        recordedNotes = [];
-        document.getElementById('log-area').innerHTML = '';
-    }
-</script>
-
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple 4Key Rhythm Game (Custom Chart)</title>
-    <style>
-        /* ==========================================================================
-           1. 全体的なデザイン（UI/UX） - 白と黒を基調としたシンプルなデザイン
-           ========================================================================== */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        body {
-            background-color: #ffffff;
-            color: #000000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 800px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
-        button {
-            background-color: #000000;
-            color: #ffffff;
-            border: 1px solid #000000;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin: 5px;
-        }
-
-        button:hover {
-            background-color: #ffffff;
-            color: #000000;
-        }
-
-        /* URL入力エリア */
-        .url-input-container {
-            width: 100%;
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .url-input {
-            flex: 1;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #000000;
-            outline: none;
-        }
-
-        /* 譜面データの入力エリア */
-        .chart-input-container {
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .chart-input {
-            width: 100%;
-            height: 60px;
-            padding: 8px;
-            font-size: 12px;
-            border: 1px solid #000000;
-            resize: none;
-        }
-
-        .screen {
-            display: none;
-            width: 100%;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .screen.active {
-            display: flex;
-        }
-
-        .notice-box {
-            background-color: #fffde7;
-            border: 1px solid #fff59d;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
-            width: 100%;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #333333;
-        }
-
-        .notice-box h3 {
-            margin-bottom: 8px;
-            font-size: 15px;
-            color: #000000;
-        }
-
-        .notice-box ul {
-            list-style-type: none;
-        }
-
-        .video-container {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%;
-            background-color: #000000;
-            margin-bottom: 20px;
-        }
-
-        .video-container iframe, .video-container div {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .menu-buttons {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .menu-buttons button {
-            flex: 1;
-            max-width: 200px;
-            padding: 15px;
-            font-size: 18px;
-        }
-
-        .game-status {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .game-board {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            height: 400px;
-            border: 2px solid #000000;
-            background-color: #ffffff;
-            overflow: hidden;
-        }
-
-        .lanes {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .lane {
-            flex: 1;
-            border-right: 1px dashed #cccccc;
-            position: relative;
-            height: 100%;
-        }
-
-        .lane:last-child {
-            border-right: none;
-        }
-
-        .judgment-line {
-            position: absolute;
-            bottom: 50px;
-            width: 100%;
-            height: 2px;
-            background-color: #000000;
-            z-index: 5;
-        }
-
-        .key-label {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-            color: #666666;
-        }
-
-        .lane.active {
-            background-color: #f0f0f0;
-        }
-
-        .note {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background-color: #000000;
-            border-radius: 50%;
-            left: calc(50% - 20px);
-            z-index: 3;
-            transform: translateY(-20px);
-        }
-
-        .judgment-text {
-            position: absolute;
-            top: 40%;
-            width: 100%;
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-            pointer-events: none;
-            z-index: 10;
-            height: 35px;
-        }
-
-        .controls {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .editor-layout {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            gap: 20px;
-        }
-
-        .editor-workspace {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-        }
-
-        @media (max-width: 600px) {
-            .editor-workspace {
-                flex-direction: column;
-            }
-        }
-
-        .editor-left {
-            flex: 1;
-        }
-
-        .editor-right {
-            width: 250px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @media (max-width: 600px) {
-            .editor-right {
-                width: 100%;
-            }
-        }
-
-        .log-area {
-            border: 1px solid #000000;
-            height: 200px;
-            overflow-y: scroll;
-            background: #fafafa;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 13px;
-        }
-
-        .log-item {
-            border-bottom: 1px solid #eeeeee;
-            padding: 4px 0;
-        }
-
-        .output-area {
-            width: 100%;
-            height: 120px;
-            margin-top: 10px;
-            font-family: monospace;
-            font-size: 12px;
-            padding: 10px;
-            border: 1px solid #000000;
-            resize: none;
-        }
-
-        .back-btn {
-            align-self: flex-start;
-            margin-bottom: 15px;
-            background-color: #ffffff;
-            color: #000000;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Rhythm Tap Stream</h1>
-
-    <div id="shared-notice" class="notice-box">
-        <h3>⚠️ 利用者のみなさまへのお願い（注意事項）</h3>
-        <ul>
-            <li>1. ゲーム作成・プレイの際は、アーティストや公式レーベルがYouTubeで公開している「公式動画（MVなど）」のURLをご利用ください。</li>
-            <li>2. 違法にアップロードされた動画や、著作権を侵害している動画のURLは絶対に使用しないでください。</li>
-            <li>3. 本サービスはYouTubeの公式埋め込み機能を利用した非営利の個人ファンサイトです。音源のダウンロードや無断転載は一切行っていません。</li>
-        </ul>
-    </div>
-
-    <div style="width: 100%; border: 1px solid #000; padding: 15px; margin-bottom: 20px;">
-        <h4 style="margin-bottom: 10px;">🎵 使用する曲と譜面の設定</h4>
-        <div class="url-input-container">
-            <input type="text" id="youtube-url-input" class="url-input" placeholder="YouTubeのURLまたは動画ID（空欄ならWANIMA『CHARM』）">
-            <button onclick="loadUserVideo()">動画を読み込む</button>
-        </div>
-        <div class="chart-input-container">
-            <textarea id="chart-data-input" class="chart-input" placeholder="【遊ぶ時用】作った譜面データ（JSON）をここに貼り付けてから「ゲームで遊ぶ」へ進むと、その譜面でプレイできます（空欄ならランダム自動生成）"></textarea>
-        </div>
-    </div>
-
-    <div id="screen-top" class="screen active">
-        <div class="menu-buttons">
-            <button onclick="switchScreen('play')">ゲームで遊ぶ</button>
-            <button onclick="switchScreen('edit')">ゲームを作る</button>
-        </div>
-    </div>
-
-    <div id="screen-play" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← トップへ戻る</button>
-        
-        <div class="video-container">
-            <div id="youtube-player-play"></div>
-        </div>
-
-        <div class="game-status">
-            <div id="score-display">SCORE: 0</div>
-            <div id="combo-display">COMBO: 0</div>
-        </div>
-
-        <div class="game-board">
-            <div id="judgment-text" class="judgment-text"></div>
-            <div class="judgment-line"></div>
-            
-            <div class="lanes">
-                <div class="lane" id="lane-play-0"><span class="key-label">D</span></div>
-                <div class="lane" id="lane-play-1"><span class="key-label">F</span></div>
-                <div class="lane" id="lane-play-2"><span class="key-label">J</span></div>
-                <div class="lane" id="lane-play-3"><span class="key-label">K</span></div>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button id="btn-play-start" onclick="startPlayGame()">曲を再生してスタート</button>
-            <button onclick="resetPlayGame()">リセット</button>
-        </div>
-    </div>
-
-    <div id="screen-edit" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← トップへ戻る</button>
-        
-        <div class="editor-layout">
-            <div class="editor-workspace">
-                <div class="editor-left">
-                    <div class="video-container">
-                        <div id="youtube-player-edit"></div>
-                    </div>
-                    <div class="controls">
-                        <button id="btn-edit-start" onclick="startEditGame()">動画を再生</button>
-                        <button onclick="pauseEditGame()">一時停止</button>
-                        <button onclick="clearEditLogs()">記録をクリア</button>
-                    </div>
-                    <p style="font-size: 13px; margin-top: 10px; color:#666;">
-                        ※動画再生中にキーボードの【D, F, J, K】を押すと、その瞬間のタイミングが右側にリアルタイムで記録されます。
-                    </p>
-                </div>
-
-                <div class="editor-right">
-                    <h4 style="margin-bottom: 5px; font-size:14px;">タップ記録ログ</h4>
-                    <div id="log-area" class="log-area"></div>
-                </div>
-            </div>
-
-            <div style="width: 100%; border-top: 1px solid #000; padding-top: 15px;">
-                <button onclick="generateChartData()">譜面データを出力 (JSON)</button>
-                <textarea id="output-area" class="output-area" readonly placeholder="ボタンを押すとここにJSON形式のデータが出力されます。コピーして利用できます。"></textarea>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<script src="https://www.youtube.com/iframe_api"></script>
-
-<script>
-    let currentVideoId = 'P_NfP9_I6As'; 
-    const KEYS = ['d', 'f', 'j', 'k'];
-    
-    let playerPlay = null;
-    let playerEdit = null;
-
-    let isPlaying = false;
-    let score = 0;
-    let combo = 0;
-    let activeNotes = [];
-    
-    // 自作譜面用の管理変数
-    let loadedChartNotes = []; // 読み込んだ譜面データ配列
-    let nextNoteIndex = 0;    // 次に降らせるノーツのインデックス
-    let playTimerId = null;   // タイマーのID
-
-    const JUDGMENT_LINE_Y = 350;
-    const NOTE_SPEED = 5; // スムーズにするため速度を少し調整
-    let animationFrameId = null;
-
-    let recordedNotes = [];
-
-    function extractVideoId(urlOrId) {
-        if (!urlOrId) return null;
-        const trimmed = urlOrId.trim();
-        if (trimmed.length === 11 && !trimmed.includes('/') && !trimmed.includes('=')) {
-            return trimmed;
-        }
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = trimmed.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    }
-
-    function loadUserVideo() {
-        const inputVal = document.getElementById('youtube-url-input').value;
-        if (!inputVal) {
-            alert('URLまたは動画IDが空欄のため、初期楽曲(WANIMA)を読み込みます。');
-            currentVideoId = 'P_NfP9_I6As';
-        } else {
-            const videoId = extractVideoId(inputVal);
-            if (!videoId) {
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple 4Key Rhythm Game (URL Loader)</title>
-    <style>
-        /* ==========================================================================
-           1. 全体的なデザイン（UI/UX） - 白と黒を基調としたシンプルなデザイン
-           ========================================================================== */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        body {
-            background-color: #ffffff;
-            color: #000000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 800px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
-        button {
-            background-color: #000000;
-            color: #ffffff;
-            border: 1px solid #000000;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin: 5px;
-        }
-
-        button:hover {
-            background-color: #ffffff;
-            color: #000000;
-        }
-
-        /* URL入力エリアのスタイル */
-        .url-input-container {
-            width: 100%;
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .url-input {
-            flex: 1;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #000000;
-            outline: none;
-        }
-
-        /* 画面の切り替え用 */
-        .screen {
-            display: none;
-            width: 100%;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .screen.active {
-            display: flex;
-        }
-
-        /* 注意事項のスタイル */
-        .notice-box {
-            background-color: #fffde7;
-            border: 1px solid #fff59d;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
-            width: 100%;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #333333;
-        }
-
-        .notice-box h3 {
-            margin-bottom: 8px;
-            font-size: 15px;
-            color: #000000;
-        }
-
-        .notice-box ul {
-            list-style-type: none;
-        }
-
-        /* YouTube埋め込みエリア（レスポンシブ対応） */
-        .video-container {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%; /* 16:9 アスペクト比 */
-            background-color: #000000;
-            margin-bottom: 20px;
-        }
-
-        .video-container iframe, .video-container div {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* ==========================================================================
-           2. トップ画面のスタイル
-           ========================================================================== */
-        .menu-buttons {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .menu-buttons button {
-            flex: 1;
-            max-width: 200px;
-            padding: 15px;
-            font-size: 18px;
-        }
-
-        /* ==========================================================================
-           3. 遊ぶ画面（プレイモード）のスタイル
-           ========================================================================== */
-        .game-status {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .game-board {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            height: 400px;
-            border: 2px solid #000000;
-            background-color: #ffffff;
-            overflow: hidden;
-        }
-
-        .lanes {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .lane {
-            flex: 1;
-            border-right: 1px dashed #cccccc;
-            position: relative;
-            height: 100%;
-        }
-
-        .lane:last-child {
-            border-right: none;
-        }
-
-        .judgment-line {
-            position: absolute;
-            bottom: 50px;
-            width: 100%;
-            height: 2px;
-            background-color: #000000;
-            z-index: 5;
-        }
-
-        .key-label {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
-            text-align: center;
-            font-weight: bold;
-            font-size: 16px;
-            color: #666666;
-        }
-
-        .lane.active {
-            background-color: #f0f0f0;
-        }
-
-        .note {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background-color: #000000;
-            border-radius: 50%;
-            left: calc(50% - 20px);
-            z-index: 3;
-            transform: translateY(-20px);
-        }
-
-        .judgment-text {
-            position: absolute;
-            top: 40%;
-            width: 100%;
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-            pointer-events: none;
-            z-index: 10;
-            height: 35px;
-        }
-
-        .controls {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-
-        /* ==========================================================================
-           4. 作る画面（エディタモード）のスタイル
-           ========================================================================== */
-        .editor-layout {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            gap: 20px;
-        }
-
-        .editor-workspace {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-        }
-
-        @media (max-width: 600px) {
-            .editor-workspace {
-                flex-direction: column;
-            }
-        }
-
-        .editor-left {
-            flex: 1;
-        }
-
-        .editor-right {
-            width: 250px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @media (max-width: 600px) {
-            .editor-right {
-                width: 100%;
-            }
-        }
-
-        .log-area {
-            border: 1px solid #000000;
-            height: 200px;
-            overflow-y: scroll;
-            background: #fafafa;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 13px;
-        }
-
-        .log-item {
-            border-bottom: 1px solid #eeeeee;
-            padding: 4px 0;
-        }
-
-        .output-area {
-            width: 100%;
-            height: 120px;
-            margin-top: 10px;
-            font-family: monospace;
-            font-size: 12px;
-            padding: 10px;
-            border: 1px solid #000000;
-            resize: none;
-        }
-
-        .back-btn {
-            align-self: flex-start;
-            margin-bottom: 15px;
-            background-color: #ffffff;
-            color: #000000;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Rhythm Tap Stream</h1>
-
-    <div id="shared-notice" class="notice-box">
-        <h3>⚠️ 利用者のみなさまへのお願い（注意事項）</h3>
-        <ul>
-            <li>1. ゲーム作成・プレイの際は、アーティストや公式レーベルがYouTubeで公開している「公式動画（MVなど）」のURLをご利用ください。</li>
-            <li>2. 違法にアップロードされた動画や、著作権を侵害している動画のURLは絶対に使用しないでください。</li>
-            <li>3. 本サービスはYouTubeの公式埋め込み機能を利用した非営利の個人ファンサイトです。音源のダウンロードや無断転載は一切行っていません。</li>
-        </ul>
-    </div>
-
-    <div class="url-input-container">
-        <input type="text" id="youtube-url-input" class="url-input" placeholder="YouTubeのURLまたは動画IDを入力（例: https://www.youtube.com/watch?v=P_NfP9_I6As）">
-        <button onclick="loadUserVideo()">動画を読み込む</button>
-    </div>
-
-    <div id="screen-top" class="screen active">
-        <div class="menu-buttons">
-            <button onclick="switchScreen('play')">ゲームで遊ぶ</button>
-            <button onclick="switchScreen('edit')">ゲームを作る</button>
-        </div>
-    </div>
-
-    <div id="screen-play" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← トップへ戻る</button>
-        
-        <div class="video-container">
-            <div id="youtube-player-play"></div>
-        </div>
-
-        <div class="game-status">
-            <div id="score-display">SCORE: 0</div>
-            <div id="combo-display">COMBO: 0</div>
-        </div>
-
-        <div class="game-board">
-            <div id="judgment-text" class="judgment-text"></div>
-            <div class="judgment-line"></div>
-            
-            <div class="lanes">
-                <div class="lane" id="lane-play-0"><span class="key-label">D</span></div>
-                <div class="lane" id="lane-play-1"><span class="key-label">F</span></div>
-                <div class="lane" id="lane-play-2"><span class="key-label">J</span></div>
-                <div class="lane" id="lane-play-3"><span class="key-label">K</span></div>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button id="btn-play-start" onclick="startPlayGame()">曲を再生してスタート</button>
-            <button onclick="resetPlayGame()">リセット</button>
-        </div>
-    </div>
-
-    <div id="screen-edit" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← トップへ戻る</button>
-        
-        <div class="editor-layout">
-            <div class="editor-workspace">
-                <div class="editor-left">
-                    <div class="video-container">
-                        <div id="youtube-player-edit"></div>
-                    </div>
-                    <div class="controls">
-                        <button id="btn-edit-start" onclick="startEditGame()">動画を再生</button>
-                        <button onclick="pauseEditGame()">一時停止</button>
-                        <button onclick="clearEditLogs()">記録をクリア</button>
-                    </div>
-                    <p style="font-size: 13px; margin-top: 10px; color:#666;">
-                        ※動画再生中にキーボードの【D, F, J, K】を押すと、その瞬間のタイミングが右側にリアルタイムで記録されます。
-                    </p>
-                </div>
-
-                <div class="editor-right">
-                    <h4 style="margin-bottom: 5px; font-size:14px;">タップ記録ログ</h4>
-                    <div id="log-area" class="log-area"></div>
-                </div>
-            </div>
-
-            <div style="width: 100%; border-top: 1px solid #000; padding-top: 15px;">
-                <button onclick="generateChartData()">譜面データを出力 (JSON)</button>
-                <textarea id="output-area" class="output-area" readonly placeholder="ボタンを押すとここにJSON形式のデータが出力されます。コピーして利用できます。"></textarea>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<script src="https://www.youtube.com/iframe_api"></script>
-
-<script>
-    // 初期状態の動画ID (WANIMA - CHARM)
-    let currentVideoId = 'P_NfP9_I6As'; 
-    const KEYS = ['d', 'f', 'j', 'k'];
-    
-    let playerPlay = null;
-    let playerEdit = null;
-
-    let isPlaying = false;
-    let score = 0;
-    let combo = 0;
-    let activeNotes = [];
-    let playTimerId = null;
-    const JUDGMENT_LINE_Y = 350;
-    const NOTE_SPEED = 4;
-    let animationFrameId = null;
-
-    let recordedNotes = [];
-
-    // ==========================================================================
-    // YouTube URLから動画IDを抽出する関数
-    // ==========================================================================
-    function extractVideoId(urlOrId) {
-        if (!urlOrId) return null;
-        
-        // 前後の空白を削除
-        const trimmed = urlOrId.trim();
-        
-        // 11文字の通常の動画IDそのものの場合はそのまま返す
-        if (trimmed.length === 11 && !trimmed.includes('/') && !trimmed.includes('=')) {
-            return trimmed;
-        }
-
-        // 様々なYouTube URLの形式からIDを抽出する正規表現
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = trimmed.match(regExp);
-
-        return (match && match[2].length === 11) ? match[2] : null;
-    }
-
-    // ==========================================================================
-    // 入力されたURL/IDを読み込んでプレイヤーを更新する関数
-    // ==========================================================================
-    function loadUserVideo() {
-        const inputVal = document.getElementById('youtube-url-input').value;
-        if (!inputVal) {
-            alert('URLまたは動画IDを入力してください。');
-            return;
-        }
-
-        const videoId = extractVideoId(inputVal);
-        if (!videoId) {
-            alert('有効なYouTubeのURLまたは動画IDが見つかりませんでした。URLを再度ご確認ください。');
-            return;
-        }
-
-        // 現在の動画IDを更新
-        currentVideoId = videoId;
-
-        // 稼働中のゲームをリセット
-        resetPlayGame();
-        clearEditLogs();
-
-        // プレイヤーオブジェクトが存在すれば、新しい動画IDでキュー（読み込み）を行う
-        if (playerPlay && typeof playerPlay.cueVideoById === 'function') {
-            playerPlay.cueVideoById(currentVideoId);
-        }
-        if (playerEdit && typeof playerEdit.cueVideoById === 'function') {
-            playerEdit.cueVideoById(currentVideoId);
-        }
-
-        alert('動画を新しく読み込みました！「ゲームで遊ぶ」または「ゲームを作る」画面で反映されています。');
-    }
-
-    // ==========================================================================
-    // YouTube IFrame API 初期化
-    // ==========================================================================
-    function onYouTubeIframeAPIReady() {
-        playerPlay = new YT.Player('youtube-player-play', {
-            videoId: currentVideoId,
-            playerVars: {
-                'playsinline': 1,
-                'controls': 1,
-                'disablekb': 1
-            },
-            events: {
-                'onStateChange': onPlayerPlayStateChange
-            }
-        });
-
-        playerEdit = new YT.Player('youtube-player-edit', {
-            videoId: currentVideoId,
-            playerVars: {
-                'playsinline': 1,
-                'controls': 1,
-                'disablekb': 1
-            }
-        });
-    }
-
-    // ==========================================================================
-    // 画面切り替え機能
-    // ==========================================================================
-    function switchScreen(screenName) {
-        document.getElementById('screen-top').classList.remove('active');
-        document.getElementById('screen-play').classList.remove('active');
-        document.getElementById('screen-edit').classList.remove('active');
-
-        if(playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo();
-        if(playerEdit && typeof playerEdit.pauseVideo === 'function') playerEdit.pauseVideo();
-        resetPlayGame();
-
-        if (screenName === 'top') {
-            document.getElementById('screen-top').classList.add('active');
-        } else if (screenName === 'play') {
-            document.getElementById('screen-play').classList.add('active');
-        } else if (screenName === 'edit') {
-            document.getElementById('screen-edit').classList.add('active');
-        }
-    }
-
-    // ==========================================================================
-    // キーボード入力の受付（プレイ・エディタ共通）
-    // ==========================================================================
-    window.addEventListener('keydown', function(e) {
-        const key = e.key.toLowerCase();
-        const keyIndex = KEYS.indexOf(key);
-        
-        if (keyIndex === -1) return;
-
-        if (document.getElementById('screen-play').classList.contains('active')) {
-            const lane = document.getElementById(`lane-play-${keyIndex}`);
-            if (lane) lane.classList.add('active');
-            if (isPlaying) {
-                checkJudgment(keyIndex);
-            }
-        }
-
-        if (document.getElementById('screen-edit').classList.contains('active')) {
-            if (playerEdit && typeof playerEdit.getCurrentTime === 'function') {
-                const state = playerEdit.getPlayerState();
-                if (state === YT.PlayerState.PLAYING) {
-                    const currentTime = playerEdit.getCurrentTime();
-                    recordedNotes.push({
-                        time: parseFloat(currentTime.toFixed(2)),
-                        key: key.toUpperCase()
-                    });
-                    
-                    const logArea = document.getElementById('log-area');
-                    const logItem = document.createElement('div');
-                    logItem.className = 'log-item';
-                    logItem.innerText = `${currentTime.toFixed(2)}秒：${key.toUpperCase()}`;
-                    logArea.appendChild(logItem);
-                    logArea.scrollTop = logArea.scrollHeight;
-                }
-            }
-        }
-    });
-
-    window.addEventListener('keyup', function(e) {
-        const key = e.key.toLowerCase();
-        const keyIndex = KEYS.indexOf(key);
-        if (keyIndex !== -1) {
-            const lane = document.getElementById(`lane-play-${keyIndex}`);
-            if (lane) lane.classList.remove('active');
-        }
-    });
-
-    // ==========================================================================
-    // 3. 遊ぶ画面のゲームロジック
-    // ==========================================================================
-    function startPlayGame() {
-        if (!playerPlay) return;
-        playerPlay.playVideo();
-    }
-
-    function onPlayerPlayStateChange(event) {
-        if (event.data === YT.PlayerState.PLAYING) {
-            if (!isPlaying) {
-                isPlaying = true;
-                animationFrameId = requestAnimationFrame(updateGame);
-                playTimerId = setInterval(generateAutoNote, 1000);
-            }
-        } else {
-            stopGameLoops();
-        }
-    }
-
-    function stopGameLoops() {
-        isPlaying = false;
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        if (playTimerId) clearInterval(playTimerId);
-    }
-
-    function resetPlayGame() {
-        stopGameLoops();
-        score = 0;
-        combo = 0;
-        document.getElementById('score-display').innerText = "SCORE: 0";
-        document.getElementById('combo-display').innerText = "COMBO: 0";
-        document.getElementById('judgment-text').innerText = "";
-        
-        activeNotes.forEach(note => {
-            if(note.element && note.element.parentNode) {
+            if (note.element && note.element.parentNode) {
                 note.element.parentNode.removeChild(note.element);
             }
         });
         activeNotes = [];
-    }
-
-    function generateAutoNote() {
-        const randomLane = Math.floor(Math.random() * 4);
-        createNoteElement(randomLane);
-    }
-
-    function createNoteElement(laneIndex) {
-        const laneElement = document.getElementById(`lane-play-${laneIndex}`);
-        if (!laneElement) return;
-        const noteElement = document.createElement('div');
-        noteElement.className = 'note';
-        noteElement.style.top = '0px';
-        laneElement.appendChild(noteElement);
-
-        activeNotes.push({
-            lane: laneIndex,
-            y: 0,
-            element: noteElement
-        });
-    }
-
-    function updateGame() {
-        if (!isPlaying) return;
-
-        for (let i = activeNotes.length - 1; i >= 0; i--) {
-            const note = activeNotes[i];
-            note.y += NOTE_SPEED;
-            note.element.style.top = note.y + 'px';
-
-            if (note.y > JUDGMENT_LINE_Y + 40) {
-                showJudgmentText("Miss", "#666666");
-                combo = 0;
-                document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-                
-                if(note.element.parentNode) note.element.parentNode.removeChild(note.element);
-                activeNotes.splice(i, 1);
-            }
-        }
-
-        animationFrameId = requestAnimationFrame(updateGame);
-    }
-
-    function checkJudgment(laneIndex) {
-        let targetNoteIndex = -1;
-        let maxPercentY = -1;
-
-        for (let i = 0; i < activeNotes.length; i++) {
-            if (activeNotes[i].lane === laneIndex) {
-                if (activeNotes[i].y > maxPercentY) {
-                    maxPercentY = activeNotes[i].y;
-                    targetNoteIndex = i;
-                }
-            }
-        }
-
-        if (targetNoteIndex === -1) return;
-
-        const targetNote = activeNotes[targetNoteIndex];
-        const diff = Math.abs(targetNote.y - JUDGMENT_LINE_Y);
-
-        let judged = false;
-        if (diff <= 15) {
-            showJudgmentText("Perfect!", "#000000");
-            score += 100;
-            combo++;
-            judged = true;
-        } else if (diff <= 35) {
-            showJudgmentText("Great!", "#333333");
-            score += 50;
-            combo++;
-            judged = true;
-        } else if (diff <= 55) {
-            showJudgmentText("Good", "#555555");
-            score += 20;
-            combo++;
-            judged = true;
-        }
-
-        if (judged) {
-            document.getElementById('score-display').innerText = `SCORE: ${score}`;
-            document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-            
-            if(targetNote.element.parentNode) targetNote.element.parentNode.removeChild(targetNote.element);
-            activeNotes.splice(targetNoteIndex, 1);
-        }
-    }
-
-    function showJudgmentText(text, color) {
-        const el = document.getElementById('judgment-text');
-        el.innerText = text;
-        el.style.color = color;
-    }
-
-    // ==========================================================================
-    // 4. 作る画面のゲームロジック
-    // ==========================================================================
-    function startEditGame() {
-        if (!playerEdit) return;
-        playerEdit.playVideo();
-    }
-
-    function pauseEditGame() {
-        if (!playerEdit) return;
-        playerEdit.pauseVideo();
-    }
-
-    function clearEditLogs() {
-        recordedNotes = [];
-        document.getElementById('log-area').innerHTML = '';
-        document.getElementById('output-area').value = '';
-    }
-
-    function generateChartData() {
-        if (recordedNotes.length === 0) {
-            document.getElementById('output-area').value = "データがありません。動画を再生しながらD, F, J, Kを押してリズムを記録してください。";
-            return;
-        }
-        const jsonOutput = JSON.stringify(recordedNotes, null, 2);
-        document.getElementById('output-area').value = jsonOutput;
     }
 </script>
 
