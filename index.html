@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Custom Edition</title>
+    <title>Rhythm Stream - Auto Generator</title>
     <style>
         /* ==========================================================================
-           全体デザイン（ミニマル・モノトーン）
+           全体デザイン（ミニマル・モノトーン＋ネオン）
            ========================================================================== */
         * {
             box-sizing: border-box;
@@ -16,8 +16,8 @@
         }
 
         body {
-            background-color: #ffffff;
-            color: #000000;
+            background-color: #111111;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -38,12 +38,13 @@
             margin-bottom: 20px;
             letter-spacing: 2px;
             text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
         button {
-            background-color: #000000;
-            color: #ffffff;
-            border: 1px solid #000000;
+            background-color: #ffffff;
+            color: #000000;
+            border: 1px solid #ffffff;
             padding: 12px 24px;
             font-size: 16px;
             font-weight: bold;
@@ -52,8 +53,8 @@
         }
 
         button:hover {
-            background-color: #ffffff;
-            color: #000000;
+            background-color: #000000;
+            color: #ffffff;
         }
 
         .screen {
@@ -67,21 +68,22 @@
         }
 
         .back-btn {
-            background-color: #ffffff;
-            color: #000000;
+            background-color: #111111;
+            color: #ffffff;
+            border-color: #ffffff;
             align-self: flex-start;
             margin-bottom: 20px;
             padding: 8px 16px;
             font-size: 14px;
         }
 
-        /* YouTube埋め込みレスポンシブ対応 */
         .video-container {
             position: relative;
             width: 100%;
             padding-top: 56.25%;
             background-color: #000000;
             margin-bottom: 20px;
+            border: 1px solid #333;
         }
 
         .video-container iframe, .video-container div {
@@ -94,18 +96,34 @@
         }
 
         /* ==========================================================================
-           【画面1】トップ画面 & 譜面一覧
+           【画面1】トップ画面 & 検索・譜面一覧
            ========================================================================== */
         .top-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #000000;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ffffff;
             padding-bottom: 15px;
+            gap: 10px;
         }
 
         .top-header h2 { font-size: 20px; }
+
+        .search-container {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #222222;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            outline: none;
+        }
 
         .chart-list {
             display: flex;
@@ -114,12 +132,12 @@
         }
 
         .chart-item {
-            border: 1px solid #000000;
+            border: 1px solid #ffffff;
             padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #ffffff;
+            background-color: #222222;
         }
 
         .chart-info h3 {
@@ -129,7 +147,7 @@
 
         .chart-info p {
             font-size: 13px;
-            color: #666666;
+            color: #aaaaaa;
         }
 
         .chart-btns {
@@ -138,17 +156,17 @@
         }
 
         .delete-btn {
-            background-color: #ffffff;
-            color: #ff0000;
-            border-color: #ff0000;
+            background-color: #222222;
+            color: #ff4444;
+            border-color: #ff4444;
         }
         .delete-btn:hover {
-            background-color: #ff0000;
+            background-color: #ff4444;
             color: #ffffff;
         }
 
         /* ==========================================================================
-           【画面2】プレイ画面（ゲーム盤面）
+           【画面2】プレイ画面 & ネオンノーツ
            ========================================================================== */
         .play-layout {
             display: flex;
@@ -172,8 +190,8 @@
             width: 100%;
             max-width: 400px;
             height: 450px;
-            border: 2px solid #000000;
-            background-color: #ffffff;
+            border: 2px solid #ffffff;
+            background-color: #050505;
             overflow: hidden;
         }
 
@@ -185,20 +203,21 @@
 
         .lane {
             flex: 1;
-            border-right: 1px dashed #dddddd;
+            border-right: 1px solid #222222;
             position: relative;
             height: 100%;
         }
 
         .lane:last-child { border-right: none; }
-        .lane.active { background-color: #f0f0f0; }
+        .lane.active { background: linear-gradient(to top, rgba(255,255,255,0.1), transparent); }
 
         .judgment-line {
             position: absolute;
             bottom: 60px;
             width: 100%;
             height: 3px;
-            background-color: #000000;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px #ffffff;
             z-index: 5;
         }
 
@@ -209,19 +228,22 @@
             text-align: center;
             font-weight: bold;
             font-size: 16px;
-            color: #000000;
+            color: #ffffff;
         }
 
         .note {
             position: absolute;
             width: 42px;
             height: 42px;
-            background-color: #000000;
             border-radius: 50%;
             left: calc(50% - 21px);
             z-index: 3;
             transform: translateY(-21px);
         }
+        .note-0 { background: #ff0055; box-shadow: 0 0 15px #ff0055; }
+        .note-1 { background: #00e5ff; box-shadow: 0 0 15px #00e5ff; }
+        .note-2 { background: #00ff66; box-shadow: 0 0 15px #00ff66; }
+        .note-3 { background: #ffea00; box-shadow: 0 0 15px #ffea00; }
 
         .judgment-text {
             position: absolute;
@@ -233,6 +255,7 @@
             height: 45px;
             pointer-events: none;
             z-index: 10;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
         }
 
         .play-controls {
@@ -242,21 +265,24 @@
         }
 
         /* ==========================================================================
-           【画面3】作製・編集画面（エディタ）
+           【画面3】エディタ画面
            ========================================================================== */
         .editor-form {
-            border: 1px solid #000000;
+            border: 1px solid #ffffff;
             padding: 20px;
             margin-bottom: 25px;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            background-color: #222222;
         }
 
         .editor-form input {
             padding: 10px;
             font-size: 15px;
-            border: 1px solid #000000;
+            background-color: #111111;
+            border: 1px solid #ffffff;
+            color: #ffffff;
             outline: none;
             width: 100%;
         }
@@ -280,23 +306,23 @@
         @media (max-width: 650px) { .editor-right { width: 100%; } }
 
         .log-box {
-            border: 1px solid #000000;
+            border: 1px solid #ffffff;
             height: 220px;
             overflow-y: auto;
-            background-color: #fafafa;
+            background-color: #111111;
             padding: 10px;
             font-family: monospace;
             font-size: 14px;
         }
 
         .log-entry {
-            border-bottom: 1px solid #eeeeee;
+            border-bottom: 1px solid #222222;
             padding: 4px 0;
         }
 
         .save-section {
             margin-top: 30px;
-            border-top: 2px solid #000000;
+            border-top: 2px solid #ffffff;
             padding-top: 20px;
             text-align: center;
         }
@@ -306,7 +332,6 @@
             max-width: 400px;
             padding: 16px;
             font-size: 18px;
-            background-color: #000000;
         }
     </style>
 </head>
@@ -318,8 +343,13 @@
     <div id="screen-top" class="screen active">
         <div class="top-header">
             <h2>🎵 登録された楽譜リスト</h2>
-            <button onclick="switchScreen('edit')">✨ 新しい譜面を打ち込む</button>
+            <button onclick="switchScreen('edit')">✨ 新しい曲・自動生成を追加</button>
         </div>
+        
+        <div class="search-container">
+            <input type="text" id="search-bar" class="search-input" placeholder="🔍 曲名で楽譜を検索..." oninput="renderChartList()">
+        </div>
+
         <div id="chart-list-container" class="chart-list">
         </div>
     </div>
@@ -358,39 +388,39 @@
     </div>
 
     <div id="screen-edit" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← 作成をキャンセル</button>
+        <button class="back-btn" onclick="switchScreen('top')">← キャンセル</button>
         
         <div class="editor-form">
-            <h3>1. 楽曲の設定</h3>
-            <input type="text" id="edit-title" placeholder="曲のタイトルを入力してください（例: CHARM）">
+            <h3>1. 楽曲の設定（URLを入れると勝手に音符が作られます！）</h3>
+            <input type="text" id="edit-title" placeholder="曲のタイトルを入力してください">
             <input type="text" id="edit-url" placeholder="YouTubeの動画URL または 動画ID を入力">
-            <button onclick="loadEditorVideo()" style="align-self: flex-start; padding: 8px 16px; font-size:14px;">動画を読み込む</button>
+            <button onclick="loadEditorVideo()" style="align-self: flex-start; padding: 8px 16px; font-size:14px; background-color:#00ff66; color:#000; border-color:#00ff66;">🎵 動画の読み込み＆音符を自動生成</button>
         </div>
 
         <div class="editor-workspace">
             <div class="editor-left">
-                <h3>2. 打ち込み</h3>
-                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">
-                    動画再生中にリズムに合わせてキーボードの【D, F, J, K】を押すと、自動的にそのタイミングが記録されます。
+                <h3>2. 生成されたプレビュー・手動修正</h3>
+                <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">
+                    自動生成された後に動画を再生しながら【D, F, J, K】を押して、さらに音符を追加することも可能です！
                 </p>
                 <div class="video-container">
                     <div id="youtube-player-edit"></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button onclick="playEditorVideo()">▶ 動画を再生</button>
+                    <button onclick="playEditorVideo()">▶ 動画を確認再生</button>
                     <button onclick="pauseEditorVideo()">⏸ 一時停止</button>
-                    <button onclick="clearEditorLogs()" style="background:#fff; color:#000;">🔄 やり直す</button>
+                    <button onclick="clearEditorLogs()" style="background:#222; color:#fff; border-color:#fff;">🔄 最初からやり直す</button>
                 </div>
             </div>
 
             <div class="editor-right">
-                <h3>📋 リアルタイムログ</h3>
+                <h3>📋 現在の音符データ</h3>
                 <div id="log-area" class="log-box"></div>
             </div>
         </div>
 
         <div class="save-section">
-            <button class="save-btn" onclick="saveNewChart()">💾 譜面を完成させて一覧に保存する</button>
+            <button class="save-btn" onclick="saveNewChart()" style="background-color:#00e5ff; color:#000; border-color:#00e5ff;">💾 この譜面をリストに保存する</button>
         </div>
     </div>
 
@@ -422,6 +452,27 @@
 
     let recordedNotes = [];
 
+    // Web Audio API 打鍵音処理
+    let audioCtx = null;
+    function playHitSound() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(330, audioCtx.currentTime); 
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        } catch(e) {}
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         setupDefaultChart();
         renderChartList();
@@ -429,29 +480,24 @@
 
     function setupDefaultChart() {
         if (!localStorage.getItem('stream_charts')) {
-            const sample = [{
-                id: 'sample_default',
-                title: 'CHARM (サンプル楽譜)',
-                videoId: DEFAULT_ID,
-                notes: [
-                    { time: 1.5, key: 'D' }, { time: 2.0, key: 'F' }, 
-                    { time: 2.5, key: 'J' }, { time: 3.0, key: 'K' },
-                    { time: 4.0, key: 'F' }, { time: 4.5, key: 'J' }
-                ]
-            }];
-            localStorage.setItem('stream_charts', JSON.stringify(sample));
+            localStorage.setItem('stream_charts', JSON.stringify([]));
         }
     }
 
     function renderChartList() {
         const container = document.getElementById('chart-list-container');
+        const searchWord = document.getElementById('search-bar').value.toLowerCase().trim();
         container.innerHTML = '';
+        
         const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
-        if (charts.length === 0) {
-            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">登録されている楽譜がありません。右上のボタンから作ってみましょう！</p>';
+        const filteredCharts = charts.filter(chart => chart.title.toLowerCase().includes(searchWord));
+
+        if (filteredCharts.length === 0) {
+            container.innerHTML = '<p style="color:#aaa; text-align:center; padding:20px;">該当する楽譜が見つかりません。</p>';
             return;
         }
-        charts.forEach(chart => {
+
+        filteredCharts.forEach(chart => {
             const item = document.createElement('div');
             item.className = 'chart-item';
             item.innerHTML = `
@@ -494,11 +540,11 @@
     function saveNewChart() {
         const title = document.getElementById('edit-title').value.trim();
         if (!title) {
-            alert('楽譜を保存するには、曲のタイトルを最初に入力してください。');
+            alert('保存するには、曲のタイトルを最初に入力してください。');
             return;
         }
         if (recordedNotes.length === 0) {
-            alert('ノーツデータがありません。動画を再生しながらD, F, J, Kキーを押してリズムを打ち込んでください。');
+            alert('ノーツデータがありません。');
             return;
         }
         const newChart = {
@@ -510,7 +556,7 @@
         const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
         charts.push(newChart);
         localStorage.setItem('stream_charts', JSON.stringify(charts));
-        alert(`楽譜「${title}」の保存が完了しました！トップ一覧に追加されます。`);
+        alert(`楽譜「${title}」の保存が完了しました！`);
         clearEditorLogs();
         document.getElementById('edit-title').value = '';
         document.getElementById('edit-url').value = '';
@@ -526,19 +572,72 @@
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
+    // 【核心機能】動画読み込み時に自動で譜面（音符）を作成する
     function loadEditorVideo() {
+        const titleInput = document.getElementById('edit-title').value.trim();
         const urlInput = document.getElementById('edit-url').value;
         const id = extractVideoId(urlInput);
+        
+        if (!titleInput) {
+            alert('先に「曲のタイトル」を入力してください！');
+            return;
+        }
         if (!id) {
             alert('有効なYouTubeのURLまたは動画IDを入力してください。');
             return;
         }
+        
         currentEditVideoId = id;
         clearEditorLogs();
+        
         if (playerEdit && typeof playerEdit.cueVideoById === 'function') {
             playerEdit.cueVideoById(currentEditVideoId);
         }
-        alert('新しく動画を読み込みました！');
+
+        // YouTubeプレーヤーのメタデータ読み込みを少し待ってから、自動ノーツを生成
+        setTimeout(() => {
+            generateAutoNotes();
+        }, 1200);
+    }
+
+    // 【自動生成アルゴリズム】動画の長さをもとに、ランダムかつリズム良くノーツを生成する
+    function generateAutoNotes() {
+        let duration = 300; // 万が一動画の長さが取れなかった場合の初期値（5分分）
+        if (playerEdit && typeof playerEdit.getDuration === 'function') {
+            const ytDuration = playerEdit.getDuration();
+            if (ytDuration > 10) duration = ytDuration;
+        }
+
+        recordedNotes = [];
+        const logArea = document.getElementById('log-area');
+        logArea.innerHTML = '';
+
+        // 一般的な曲のテンポ（例: 0.4秒〜0.6秒間隔）で機械的にノーツを配置
+        // 最初の4秒はイントロの猶予として空ける
+        let currentTime = 4.0;
+        const keysList = ['D', 'F', 'J', 'K'];
+
+        while (currentTime < duration - 3) {
+            // ランダムにキーを選択
+            const randomKey = keysList[Math.floor(Math.random() * keysList.length)];
+            
+            recordedNotes.push({
+                time: parseFloat(currentTime.toFixed(2)),
+                key: randomKey
+            });
+
+            const log = document.createElement('div');
+            log.className = 'log-entry';
+            log.innerText = `${currentTime.toFixed(2)}秒: [${randomKey}] (自動生成)`;
+            logArea.appendChild(log);
+
+            // 次のノーツまでの間隔（リズムが崩れすぎないよう0.4〜0.8秒の間でランダムに）
+            const nextGap = 0.4 + (Math.floor(Math.random() * 3) * 0.2); 
+            currentTime += nextGap;
+        }
+        
+        logArea.scrollTop = 0;
+        alert('✨ お待たせしました！YouTube動画から、ネオン音符を自動で1曲分生成しました！下の青い保存ボタンを押せば、すぐにプレイリストに登録されます！');
     }
 
     function onYouTubeIframeAPIReady() {
@@ -567,7 +666,8 @@
         resetPlayGame();
 
         if (name === 'top') {
-            document.getElementById('screen-top').classList.add('active'); // 修正箇所（classListの追加）
+            document.getElementById('screen-top').classList.add('active');
+            document.getElementById('search-bar').value = '';
             renderChartList();
         } else if (name === 'play') {
             document.getElementById('screen-play').classList.add('active');
@@ -583,9 +683,7 @@
         document.getElementById('log-area').innerHTML = '';
     }
 
-    // ==========================================================================
-    // キーボード入力の検知
-    // ==========================================================================
+    // キーボード入力検知
     window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
         const keyIndex = KEYS.indexOf(key);
@@ -594,11 +692,13 @@
         if (document.getElementById('screen-play').classList.contains('active')) {
             const lane = document.getElementById(`lane-play-${keyIndex}`);
             if (lane) lane.classList.add('active');
+            playHitSound();
             if (isPlaying && !isCountingDown) checkHitJudgment(keyIndex);
         }
 
         if (document.getElementById('screen-edit').classList.contains('active') && playerEdit) {
             if (playerEdit.getPlayerState() === YT.PlayerState.PLAYING) {
+                playHitSound();
                 const time = playerEdit.getCurrentTime();
                 recordedNotes.push({
                     time: parseFloat(time.toFixed(2)),
@@ -607,7 +707,7 @@
                 const logArea = document.getElementById('log-area');
                 const log = document.createElement('div');
                 log.className = 'log-entry';
-                log.innerText = `${time.toFixed(2)}秒: [${key.toUpperCase()}]`;
+                log.innerText = `${time.toFixed(2)}秒: [${key.toUpperCase()}] (手動追加)`;
                 logArea.appendChild(log);
                 logArea.scrollTop = logArea.scrollHeight;
             }
@@ -623,9 +723,7 @@
         }
     });
 
-    // ==========================================================================
-    // 3・2·1 カウントダウンシステム
-    // ==========================================================================
+    // カウントダウン
     function startCountdown() {
         if (isPlaying || isCountingDown) return;
         
@@ -633,21 +731,19 @@
         resetPlayGame(); 
         
         let count = 3;
-        updateJudgmentUI(count, "#ff0000");
+        updateJudgmentUI(count, "#ff0055");
 
         countdownIntervalId = setInterval(() => {
             count--;
             if (count > 0) {
-                updateJudgmentUI(count, "#ff0000");
+                updateJudgmentUI(count, "#ff0055");
             } else if (count === 0) {
-                updateJudgmentUI("START!!", "#00cc00");
+                updateJudgmentUI("START!!", "#00ff66");
             } else {
                 clearInterval(countdownIntervalId);
                 isCountingDown = false;
-                updateJudgmentUI("", "#000");
-                if (playerPlay) {
-                    playerPlay.playVideo();
-                }
+                updateJudgmentUI("", "#fff");
+                if (playerPlay) playerPlay.playVideo();
             }
         }, 1000);
     }
@@ -682,13 +778,10 @@
             }
         }
 
-        // 全ノーツが流れ終わり、画面上に何も残っていなければ「確実に」終了して動画ストップ
         if (nextNoteIndex >= loadedChartNotes.length && activeNotes.length === 0) {
             stopGameLoops();
-            if (playerPlay && typeof playerPlay.pauseVideo === 'function') {
-                playerPlay.pauseVideo(); 
-            }
-            updateJudgmentUI("CLEAR!!", "#00cc00");
+            if (playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo(); 
+            updateJudgmentUI("CLEAR!!", "#00ff66");
         }
     }
 
@@ -696,7 +789,7 @@
         const lane = document.getElementById(`lane-play-${laneIndex}`);
         if (!lane) return;
         const element = document.createElement('div');
-        element.className = 'note';
+        element.className = `note note-${laneIndex}`; 
         element.style.top = '0px';
         lane.appendChild(element);
 
@@ -715,7 +808,7 @@
             note.element.style.top = note.y + 'px';
 
             if (note.y > JUDGMENT_LINE_Y + 40) {
-                updateJudgmentUI("Miss", "#888888");
+                updateJudgmentUI("Miss", "#555555");
                 combo = 0;
                 document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
                 if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
@@ -741,13 +834,13 @@
         let scored = false;
 
         if (diff <= 16) {
-            updateJudgmentUI("Perfect!", "#000000");
+            updateJudgmentUI("Perfect!", "#ffffff");
             score += 100; combo++; scored = true;
         } else if (diff <= 36) {
-            updateJudgmentUI("Great!", "#333333");
+            updateJudgmentUI("Great!", "#00e5ff");
             score += 50; combo++; scored = true;
         } else if (diff <= 56) {
-            updateJudgmentUI("Good", "#666666");
+            updateJudgmentUI("Good", "#aaaaaa");
             score += 20; combo++; scored = true;
         }
 
@@ -763,6 +856,7 @@
         const el = document.getElementById('judgment-text');
         el.innerText = text;
         el.style.color = color;
+        el.style.textShadow = `0 0 10px ${color}`;
     }
 
     function stopGameLoops() {
@@ -771,16 +865,10 @@
         if (gameTimerId) clearInterval(gameTimerId);
     }
 
-    // ==========================================================================
-    // 【確実化】リセット処理
-    // ==========================================================================
     function clickResetButton() {
         if (countdownIntervalId) clearInterval(countdownIntervalId);
         isCountingDown = false;
-
         resetPlayGame(); 
-        
-        // 動画を確実に0.0秒に巻き戻して、一時停止状態にします
         if (playerPlay && typeof playerPlay.seekTo === 'function') {
             playerPlay.seekTo(0, true);
             playerPlay.pauseVideo();
@@ -795,15 +883,11 @@
         document.getElementById('score-display').innerText = "SCORE: 0";
         document.getElementById('combo-display').innerText = "COMBO: 0";
         document.getElementById('judgment-text').innerText = "";
-        
         activeNotes.forEach(note => {
-            if (note.element && note.element.parentNode) {
-                note.element.parentNode.removeChild(note.element);
-            }
+            if (note.element && note.element.parentNode) note.element.parentNode.removeChild(note.element);
         });
         activeNotes = [];
     }
 </script>
-
 </body>
 </html>
