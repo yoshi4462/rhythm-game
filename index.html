@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Simple White Edition</title>
+    <title>Rhythm Stream - Pure Auto Player</title>
     <style>
         /* ==========================================================================
-           全体デザイン（白を基調としたシンプルなデザイン）
+           全体デザイン：白を基調とした超シンプル・ミニマルスタイル
            ========================================================================== */
         * {
             box-sizing: border-box;
@@ -27,17 +27,17 @@
 
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 600px;
             display: flex;
             flex-direction: column;
         }
 
         h1 {
-            font-size: 26px;
+            font-size: 28px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             letter-spacing: 2px;
-            text-transform: uppercase;
+            font-weight: bold;
             border-bottom: 2px solid #000000;
             padding-bottom: 10px;
         }
@@ -62,103 +62,72 @@
             display: none;
             width: 100%;
             flex-direction: column;
+            gap: 20px;
         }
 
         .screen.active {
             display: flex;
         }
 
-        .back-btn {
-            background-color: #ffffff;
-            color: #000000;
-            border-color: #000000;
-            align-self: flex-start;
-            margin-bottom: 20px;
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-
-        .video-container {
-            position: relative;
-            width: 100%;
-            padding-top: 56.25%;
-            background-color: #000000;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-        }
-
-        .video-container iframe, .video-container div {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
         /* ==========================================================================
-           【画面1】トップ画面 & 譜面一覧
+           【画面1】トップ画面（URL入力 ＆ 楽曲リスト）
            ========================================================================== */
-        .top-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            gap: 10px;
-        }
-
-        .top-header h2 { font-size: 20px; }
-
-        .search-container {
-            margin-bottom: 20px;
-            width: 100%;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            background-color: #ffffff;
-            border: 1px solid #000000;
-            color: #000000;
-            outline: none;
-        }
-
-        .chart-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .chart-item {
+        .input-box {
             border: 1px solid #000000;
             padding: 20px;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-box input {
+            padding: 12px;
+            font-size: 15px;
+            border: 1px solid #000000;
+            outline: none;
+            width: 100%;
+        }
+
+        .list-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            border-bottom: 1px solid #000000;
+            padding-bottom: 5px;
+        }
+
+        .song-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .song-item {
+            border: 1px solid #000000;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #f9f9f9;
+            background-color: #ffffff;
         }
 
-        .chart-info h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
+        .song-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
         }
 
-        .chart-info p {
-            font-size: 13px;
+        .song-info p {
+            font-size: 12px;
             color: #666666;
-        }
-
-        .chart-btns {
-            display: flex;
-            gap: 10px;
         }
 
         .delete-btn {
             background-color: #ffffff;
             color: #ff4444;
             border-color: #ff4444;
+            padding: 6px 12px;
+            font-size: 13px;
         }
         .delete-btn:hover {
             background-color: #ff4444;
@@ -168,28 +137,34 @@
         /* ==========================================================================
            【画面2】プレイ画面
            ========================================================================== */
-        .play-layout {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .video-wrapper {
+            position: relative;
             width: 100%;
+            padding-top: 56.25%;
+            background-color: #000000;
+            border: 1px solid #000000;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .game-status {
             display: flex;
             justify-content: space-between;
-            width: 100%;
-            max-width: 400px;
             font-size: 18px;
             font-weight: bold;
-            margin-bottom: 10px;
+            padding: 0 10px;
         }
 
-        .game-board {
+        .game-container {
             position: relative;
             width: 100%;
-            max-width: 400px;
-            height: 450px;
+            height: 400px;
             border: 2px solid #000000;
             background-color: #ffffff;
             overflow: hidden;
@@ -211,7 +186,7 @@
         .lane:last-child { border-right: none; }
         .lane.active { background-color: #f0f0f0; }
 
-        .judgment-line {
+        .line {
             position: absolute;
             bottom: 60px;
             width: 100%;
@@ -220,89 +195,44 @@
             z-index: 5;
         }
 
-        .key-label {
+        .key-text {
             position: absolute;
             bottom: 15px;
             width: 100%;
             text-align: center;
             font-weight: bold;
             font-size: 16px;
-            color: #000000;
         }
 
         .note {
             position: absolute;
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            left: calc(50% - 21px);
+            left: calc(50% - 20px);
             z-index: 3;
-            transform: translateY(-21px);
+            transform: translateY(-20px);
             background-color: #000000;
         }
 
-        .judgment-text {
+        .ui-text {
             position: absolute;
             top: 35%;
             width: 100%;
             text-align: center;
-            font-size: 36px;
+            font-size: 32px;
             font-weight: bold;
-            height: 45px;
+            height: 40px;
             pointer-events: none;
             z-index: 10;
         }
 
-        .play-controls {
-            margin-top: 20px;
+        .control-panel {
             display: flex;
-            gap: 15px;
+            gap: 10px;
         }
-
-        /* ==========================================================================
-           【画面3】オート生成専用画面
-           ========================================================================== */
-        .editor-form {
-            border: 1px solid #000000;
-            padding: 25px;
-            margin-bottom: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background-color: #f9f9f9;
-        }
-
-        .editor-form input {
-            padding: 12px;
-            font-size: 16px;
-            background-color: #ffffff;
-            border: 1px solid #000000;
-            color: #000000;
-            outline: none;
-            width: 100%;
-        }
-
-        .generate-btn {
-            background-color: #000000;
-            color: #ffffff;
-            border-color: #000000;
-            padding: 14px;
-            font-size: 16px;
-            width: 100%;
-        }
-        .generate-btn:hover {
-            background-color: #ffffff;
-            color: #000000;
-        }
-
-        .status-box {
-            border: 1px solid #ccc;
-            background-color: #ffffff;
-            padding: 15px;
-            font-size: 14px;
-            color: #333333;
-            text-align: center;
-            min-height: 50px;
+        .control-panel button {
+            flex: 1;
         }
     </style>
 </head>
@@ -311,445 +241,383 @@
 <div class="container">
     <h1>Rhythm Stream</h1>
 
-    <div id="screen-top" class="screen active">
-        <div class="top-header">
-            <h2>🎵 登録された楽譜リスト</h2>
-            <button onclick="switchScreen('edit')">✨ URLから楽譜を自動生成する</button>
-        </div>
-        
-        <div class="search-container">
-            <input type="text" id="search-bar" class="search-input" placeholder="🔍 曲名で楽譜を検索..." oninput="renderChartList()">
+    <div id="view-top" class="screen active">
+        <div class="input-box">
+            <h3 style="font-size: 16px;">🎵 新しい曲を自動生成して追加</h3>
+            <input type="text" id="input-title" placeholder="曲のタイトルを入力">
+            <input type="text" id="input-url" placeholder="YouTubeの動画URL または 動画ID を入力">
+            <button onclick="generateNewChart()">⚡ 音符を全自動生成して保存</button>
         </div>
 
-        <div id="chart-list-container" class="chart-list">
-        </div>
+        <div class="list-title">📋 作成された楽譜リスト</div>
+        <div id="list-container" class="song-list"></div>
     </div>
 
-    <div id="screen-play" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← 一覧リストに戻る</button>
+    <div id="view-play" class="screen">
+        <button onclick="toTopView()" style="background-color: #ffffff; color: #000; border-color: #000; align-self: flex-start; padding: 6px 12px; font-size: 14px;">← リストに戻る</button>
         
-        <div class="play-layout">
-            <h2 id="play-song-title" style="margin-bottom: 15px; text-align: center;">-</h2>
-            
-            <div class="video-container">
-                <div id="youtube-player-play"></div>
-            </div>
+        <h2 id="play-title" style="text-align: center; font-size: 18px;">-</h2>
+        
+        <div class="video-wrapper">
+            <div id="yt-player"></div>
+        </div>
 
-            <div class="game-status">
-                <div id="score-display">SCORE: 0</div>
-                <div id="combo-display">COMBO: 0</div>
-            </div>
+        <div class="game-status">
+            <div id="txt-score">SCORE: 0</div>
+            <div id="txt-combo">COMBO: 0</div>
+        </div>
 
-            <div class="game-board">
-                <div id="judgment-text" class="judgment-text"></div>
-                <div class="judgment-line"></div>
-                <div class="lanes">
-                    <div class="lane" id="lane-play-0"><span class="key-label">D</span></div>
-                    <div class="lane" id="lane-play-1"><span class="key-label">F</span></div>
-                    <div class="lane" id="lane-play-2"><span class="key-label">J</span></div>
-                    <div class="lane" id="lane-play-3"><span class="key-label">K</span></div>
-                </div>
-            </div>
-
-            <div class="play-controls">
-                <button id="btn-play-start" onclick="startCountdown()">▶ 3秒後にスタート</button>
-                <button onclick="clickResetButton()">🔄 リセット</button>
+        <div class="game-container">
+            <div id="txt-judge" class="ui-text"></div>
+            <div class="line"></div>
+            <div class="lanes">
+                <div class="lane" id="lane-0"><span class="key-text">D</span></div>
+                <div class="lane" id="lane-1"><span class="key-text">F</span></div>
+                <div class="lane" id="lane-2"><span class="key-text">J</span></div>
+                <div class="lane" id="lane-3"><span class="key-text">K</span></div>
             </div>
         </div>
-    </div>
 
-    <div id="screen-edit" class="screen">
-        <button class="back-btn" onclick="switchScreen('top')">← 戻る</button>
-        
-        <div class="editor-form">
-            <h3>🎵 YouTubeから自動で音符を作る</h3>
-            <p style="font-size: 13px; color: #666;">タイトルとURLを入力してボタンを押すだけで、自動で1曲分の譜面を作ります。</p>
-            
-            <input type="text" id="edit-title" placeholder="曲のタイトルを入力してください">
-            <input type="text" id="edit-url" placeholder="YouTubeの動画URL または 動画ID を入力">
-            
-            <button class="generate-btn" onclick="startAutoGenerationProcess()">⚡ 音符を自動生成してリストに保存！</button>
-            
-            <div id="generation-status" class="status-box">情報を入力して上のボタンを押してください。</div>
+        <div class="control-panel">
+            <button onclick="readyToPlay()">▶ 3秒後にスタート</button>
+            <button onclick="resetGame()" style="background-color: #ffffff; color: #000;">🔄 リセット</button>
         </div>
     </div>
-
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-    const KEYS = ['d', 'f', 'j', 'k'];
+    const KEY_CHARS = ['d', 'f', 'j', 'k'];
+    let ytPlayer = null;
+    let currentVideoId = '';
     
-    let playerPlay = null;
-    let currentPlayVideoId = 'P_NfP9_I6As';
-
     let isPlaying = false;
-    let isCountingDown = false; 
+    let isWaiting = false;
     let score = 0;
     let combo = 0;
     let activeNotes = [];
-    let loadedChartNotes = [];
-    let nextNoteIndex = 0;
-    let gameTimerId = null;
-    let animationFrameId = null;
-    let countdownIntervalId = null;
-    const JUDGMENT_LINE_Y = 390; 
-    const NOTE_SPEED = 6;        
+    let songNotes = [];
+    let noteIndex = 0;
+    
+    let timerId = null;
+    let frameId = null;
+    let countdownId = null;
 
-    // Web Audio API 打鍵音
+    const TARGET_Y = 340; 
+    const FALL_SPEED = 6; 
+
+    // 打鍵音
     let audioCtx = null;
-    function playHitSound() {
+    function playSound() {
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sine'; 
-            osc.frequency.setValueAtTime(330, audioCtx.currentTime); 
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.08);
+            osc.stop(audioCtx.currentTime + 0.05);
         } catch(e) {}
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        if (!localStorage.getItem('stream_charts')) {
-            localStorage.setItem('stream_charts', JSON.stringify([]));
+        if (!localStorage.getItem('rhythm_songs')) {
+            localStorage.setItem('rhythm_songs', JSON.stringify([]));
         }
-        renderChartList();
+        showSongList();
     });
 
-    function renderChartList() {
-        const container = document.getElementById('chart-list-container');
-        const searchWord = document.getElementById('search-bar').value.toLowerCase().trim();
+    function showSongList() {
+        const container = document.getElementById('list-container');
         container.innerHTML = '';
-        
-        const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
-        const filteredCharts = charts.filter(chart => chart.title.toLowerCase().includes(searchWord));
+        const songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
 
-        if (filteredCharts.length === 0) {
-            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">該当する楽譜が見つかりません。</p>';
+        if (songs.length === 0) {
+            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px; font-size:14px;">楽譜がありません。上のフォームから追加してください。</p>';
             return;
         }
 
-        filteredCharts.forEach(chart => {
+        songs.forEach(song => {
             const item = document.createElement('div');
-            item.className = 'chart-item';
+            item.className = 'song-item';
             item.innerHTML = `
-                <div class="chart-info">
-                    <h3>${chart.title}</h3>
-                    <p>動画ID: ${chart.videoId} / 総ノーツ数: ${chart.notes.length}</p>
+                <div class="song-info">
+                    <h3>${song.title}</h3>
+                    <p>総ノーツ数: ${song.notes.length}個</p>
                 </div>
-                <div class="chart-btns">
-                    <button onclick="loadAndPlayChart('${chart.id}')">▶ 遊ぶ</button>
-                    <button class="delete-btn" onclick="deleteChart('${chart.id}')">削除</button>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="startPlayMode('${song.id}')" style="padding:6px 14px; font-size:14px;">▶ 遊ぶ</button>
+                    <button class="delete-btn" onclick="deleteSong('${song.id}')">削除</button>
                 </div>
             `;
             container.appendChild(item);
         });
     }
 
-    function deleteChart(id) {
-        if (!confirm('この楽譜を削除してもよろしいですか？')) return;
-        let charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
-        charts = charts.filter(c => c.id !== id);
-        localStorage.setItem('stream_charts', JSON.stringify(charts));
-        renderChartList();
+    function extractId(url) {
+        if (!url) return null;
+        const s = url.trim();
+        if (s.length === 11 && !s.includes('/') && !s.includes('=')) return s;
+        const reg = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const m = s.match(reg);
+        return (m && m[2].length === 11) ? m[2] : null;
     }
 
-    function loadAndPlayChart(id) {
-        const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
-        const target = charts.find(c => c.id === id);
-        if (!target) return;
+    // URLから全自動で音符を作るコア処理
+    function generateNewChart() {
+        const title = document.getElementById('input-title').value.trim();
+        const urlValue = document.getElementById('input-url').value;
+        const id = extractId(urlValue);
 
-        document.getElementById('play-song-title').innerText = `🎵 演奏中：${target.title}`;
-        currentPlayVideoId = target.videoId;
-        loadedChartNotes = target.notes.sort((a, b) => a.time - b.time);
+        if (!title) { alert('曲のタイトルを入力してください！'); return; }
+        if (!id) { alert('正しいYouTubeのURLまたは動画IDを入力してください。'); return; }
 
-        if (playerPlay && typeof playerPlay.cueVideoById === 'function') {
-            playerPlay.cueVideoById(currentPlayVideoId);
-        }
-        switchScreen('play');
-    }
+        // 完全自動のランダム生成ロジック（4分間分、D F J Kのキーをちりばめる）
+        const generated = [];
+        let timeTracker = 4.0; 
+        const keys = ['D', 'F', 'J', 'K'];
 
-    function extractVideoId(urlOrId) {
-        if (!urlOrId) return null;
-        const str = urlOrId.trim();
-        if (str.length === 11 && !str.includes('/') && !str.includes('=')) return str;
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = str.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    }
-
-    // エラーの原因となっていたプレイヤー依存を無くし、ボタンを押したら即座に生成する
-    function startAutoGenerationProcess() {
-        const title = document.getElementById('edit-title').value.trim();
-        const urlInput = document.getElementById('edit-url').value;
-        const id = extractVideoId(urlInput);
-        const statusBox = document.getElementById('generation-status');
-        
-        if (!title) {
-            alert('曲のタイトルを入力してください！');
-            return;
-        }
-        if (!id) {
-            alert('有効なYouTubeのURLまたは動画IDを入力してください。');
-            return;
-        }
-
-        statusBox.innerText = "⏳ 音符データを生成中...";
-
-        // YouTubeの動画準備を待たず、一律4分（240秒）の譜面としてバックグラウンドで瞬時に作成
-        const duration = 240; 
-        const autoGeneratedNotes = [];
-        let currentTime = 4.0; 
-        const keysList = ['D', 'F', 'J', 'K'];
-
-        while (currentTime < duration - 3) {
-            const randomKey = keysList[Math.floor(Math.random() * keysList.length)];
-            autoGeneratedNotes.push({
-                time: parseFloat(currentTime.toFixed(2)),
+        while (timeTracker < 240) {
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            generated.push({
+                time: parseFloat(timeTracker.toFixed(2)),
                 key: randomKey
             });
-            const nextGap = 0.4 + (Math.floor(Math.random() * 3) * 0.2); 
-            currentTime += nextGap;
+            // 0.4秒〜0.8秒の間隔でランダムに次のノーツを配置
+            timeTracker += 0.4 + (Math.floor(Math.random() * 3) * 0.2);
         }
 
-        // 保存処理
-        const newChart = {
-            id: 'chart_' + Date.now(),
+        const newSong = {
+            id: 'song_' + Date.now(),
             title: title,
             videoId: id,
-            notes: autoGeneratedNotes
+            notes: generated
         };
-        const charts = JSON.parse(localStorage.getItem('stream_charts')) || [];
-        charts.push(newChart);
-        localStorage.setItem('stream_charts', JSON.stringify(charts));
 
-        statusBox.innerText = `✨ 成功！「${title}」の音符を自動生成して保存しました！`;
-        alert(`🎉 譜面の自動生成と保存に成功しました！\n「${title}」が追加されました！`);
+        const songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
+        songs.push(newSong);
+        localStorage.setItem('rhythm_songs', JSON.stringify(songs));
+
+        alert(`✨ 「${title}」の音符データを全自動生成して保存しました！`);
         
-        // フォームをリセットしてトップに戻る
-        document.getElementById('edit-title').value = '';
-        document.getElementById('edit-url').value = '';
-        switchScreen('top');
+        document.getElementById('input-title').value = '';
+        document.getElementById('input-url').value = '';
+        showSongList();
+    }
+
+    function deleteSong(id) {
+        if (!confirm('この曲を削除しますか？')) return;
+        let songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
+        songs = songs.filter(s => s.id !== id);
+        localStorage.setItem('rhythm_songs', JSON.stringify(songs));
+        showSongList();
+    }
+
+    function startPlayMode(id) {
+        const songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
+        const target = songs.find(s => s.id === id);
+        if (!target) return;
+
+        document.getElementById('play-title').innerText = `🎵 曲名: ${target.title}`;
+        currentVideoId = target.videoId;
+        songNotes = target.notes.sort((a, b) => a.time - b.time);
+
+        if (ytPlayer && typeof ytPlayer.cueVideoById === 'function') {
+            ytPlayer.cueVideoById(currentVideoId);
+        }
+
+        document.getElementById('view-top').classList.remove('active');
+        document.getElementById('view-play').classList.add('active');
+    }
+
+    function toTopView() {
+        if (countdownId) clearInterval(countdownId);
+        stopGame();
+        if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+        resetGame();
+
+        document.getElementById('view-play').classList.remove('active');
+        document.getElementById('view-top').classList.add('active');
+        showSongList();
     }
 
     function onYouTubeIframeAPIReady() {
-        playerPlay = new YT.Player('youtube-player-play', {
-            videoId: currentPlayVideoId,
+        ytPlayer = new YT.Player('yt-player', {
+            videoId: 'P_NfP9_I6As',
             playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 1 },
-            events: { 'onStateChange': onPlayerPlayStateChange }
+            events: { 'onStateChange': onPlayerStateChange }
         });
     }
 
-    function switchScreen(name) {
-        document.getElementById('screen-top').classList.remove('active');
-        document.getElementById('screen-play').classList.remove('active');
-        document.getElementById('screen-edit').classList.remove('active');
+    function readyToPlay() {
+        if (isPlaying || isWaiting) return;
+        isWaiting = true;
+        resetGame();
 
-        if (countdownIntervalId) clearInterval(countdownIntervalId);
-        isCountingDown = false;
-
-        if (playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo();
-        resetPlayGame();
-
-        if (name === 'top') {
-            document.getElementById('screen-top').add ? document.getElementById('screen-top').classList.add('active') : document.getElementById('screen-top').className += ' active';
-            document.getElementById('search-bar').value = '';
-            renderChartList();
-        } else {
-            document.getElementById('screen-' + name).className += ' active';
-            if (name === 'edit') {
-                document.getElementById('generation-status').innerText = "情報を入力して上のボタンを押してください。";
-            }
-        }
-    }
-
-    window.addEventListener('keydown', (e) => {
-        const key = e.key.toLowerCase();
-        const keyIndex = KEYS.indexOf(key);
-        if (keyIndex === -1) return;
-
-        if (document.getElementById('screen-play').classList.contains('active')) {
-            const lane = document.getElementById(`lane-play-${keyIndex}`);
-            if (lane) lane.className += ' active';
-            playHitSound();
-            if (isPlaying && !isCountingDown) checkHitJudgment(keyIndex);
-        }
-    });
-
-    window.addEventListener('keyup', (e) => {
-        const key = e.key.toLowerCase();
-        const keyIndex = KEYS.indexOf(key);
-        if (keyIndex !== -1) {
-            const lane = document.getElementById(`lane-play-${keyIndex}`);
-            if (lane) lane.classList.remove('active');
-        }
-    });
-
-    function startCountdown() {
-        if (isPlaying || isCountingDown) return;
-        isCountingDown = true;
-        resetPlayGame(); 
-        
         let count = 3;
-        updateJudgmentUI(count, "#ff0055");
+        setJudgeUI(count, "#000");
 
-        countdownIntervalId = setInterval(() => {
+        countdownId = setInterval(() => {
             count--;
             if (count > 0) {
-                updateJudgmentUI(count, "#ff0055");
+                setJudgeUI(count, "#000");
             } else if (count === 0) {
-                updateJudgmentUI("START!!", "#00cc44");
+                setJudgeUI("START!!", "#000");
             } else {
-                clearInterval(countdownIntervalId);
-                isCountingDown = false;
-                updateJudgmentUI("", "#000");
-                if (playerPlay) playerPlay.playVideo();
+                clearInterval(countdownId);
+                isWaiting = false;
+                setJudgeUI("", "#000");
+                if (ytPlayer) ytPlayer.playVideo();
             }
         }, 1000);
     }
 
-    function onPlayerPlayStateChange(event) {
+    function onPlayerStateChange(event) {
         if (event.data === YT.PlayerState.PLAYING) {
             if (!isPlaying) {
                 isPlaying = true;
-                animationFrameId = requestAnimationFrame(gameRenderLoop);
-                gameTimerId = setInterval(checkSpawnNotes, 20);
+                frameId = requestAnimationFrame(gameLoop);
+                timerId = setInterval(spawnCheck, 20);
             }
         } else {
-            stopGameLoops();
+            stopGame();
         }
     }
 
-    function checkSpawnNotes() {
-        if (!isPlaying || !playerPlay) return;
-        const currentTime = playerPlay.getCurrentTime();
-        const fallLag = (JUDGMENT_LINE_Y / NOTE_SPEED) / 60;
+    function spawnCheck() {
+        if (!isPlaying || !ytPlayer) return;
+        const current = ytPlayer.getCurrentTime();
+        const delay = (TARGET_Y / FALL_SPEED) / 60;
 
-        while (nextNoteIndex < loadedChartNotes.length) {
-            const noteData = loadedChartNotes[nextNoteIndex];
-            if (currentTime >= (noteData.time - fallLag)) {
-                const laneIdx = KEYS.indexOf(noteData.key.toLowerCase());
-                if (laneIdx !== -1) {
-                    spawnNoteElement(laneIdx);
+        while (noteIndex < songNotes.length) {
+            const noteData = songNotes[noteIndex];
+            if (current >= (noteData.time - delay)) {
+                const lIdx = KEY_CHARS.indexOf(noteData.key.toLowerCase());
+                if (lIdx !== -1) {
+                    createNoteNode(lIdx);
                 }
-                nextNoteIndex++;
+                noteIndex++;
             } else {
                 break;
             }
         }
-
-        if (nextNoteIndex >= loadedChartNotes.length && activeNotes.length === 0) {
-            stopGameLoops();
-            if (playerPlay && typeof playerPlay.pauseVideo === 'function') playerPlay.pauseVideo(); 
-            updateJudgmentUI("CLEAR!!", "#00cc44");
-        }
     }
 
-    function spawnNoteElement(laneIndex) {
-        const lane = document.getElementById(`lane-play-${laneIndex}`);
+    function createNoteNode(laneIdx) {
+        const lane = document.getElementById(`lane-${laneIdx}`);
         if (!lane) return;
-        const element = document.createElement('div');
-        element.className = 'note'; 
-        element.style.top = '0px';
-        lane.appendChild(element);
+        const div = document.createElement('div');
+        div.className = 'note';
+        div.style.top = '0px';
+        lane.appendChild(div);
 
         activeNotes.push({
-            lane: laneIndex,
+            lane: laneIdx,
             y: 0,
-            element: element
+            element: div
         });
     }
 
-    function gameRenderLoop() {
+    function gameLoop() {
         if (!isPlaying) return;
         for (let i = activeNotes.length - 1; i >= 0; i--) {
             const note = activeNotes[i];
-            note.y += NOTE_SPEED;
+            note.y += FALL_SPEED;
             note.element.style.top = note.y + 'px';
 
-            if (note.y > JUDGMENT_LINE_Y + 40) {
-                updateJudgmentUI("Miss", "#888888");
+            if (note.y > TARGET_Y + 40) {
+                setJudgeUI("Miss", "#666");
                 combo = 0;
-                document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
+                document.getElementById('txt-combo').innerText = `COMBO: ${combo}`;
                 if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
                 activeNotes.splice(i, 1);
             }
         }
-        animationFrameId = requestAnimationFrame(gameRenderLoop);
+        frameId = requestAnimationFrame(gameLoop);
     }
 
-    function checkHitJudgment(laneIndex) {
-        let targetIdx = -1;
-        let lowestY = -1;
-        for (let i = 0; i < activeNotes.length; i++) {
-            if (activeNotes[i].lane === laneIndex && activeNotes[i].y > lowestY) {
-                lowestY = activeNotes[i].y;
-                targetIdx = i;
+    // キー入力の判定
+    window.addEventListener('keydown', (e) => {
+        const k = e.key.toLowerCase();
+        const idx = KEY_CHARS.indexOf(k);
+        if (idx === -1) return;
+
+        const lane = document.getElementById(`lane-${idx}`);
+        if (lane) lane.classList.add('active');
+        playSound();
+
+        if (isPlaying && !isWaiting) {
+            let targetIdx = -1;
+            let maxY = -1;
+            for (let i = 0; i < activeNotes.length; i++) {
+                if (activeNotes[i].lane === idx && activeNotes[i].y > maxY) {
+                    maxY = activeNotes[i].y;
+                    targetIdx = i;
+                }
+            }
+
+            if (targetIdx !== -1) {
+                const note = activeNotes[targetIdx];
+                const diff = Math.abs(note.y - TARGET_Y);
+                let hit = false;
+
+                if (diff <= 18) {
+                    setJudgeUI("Perfect!", "#000");
+                    score += 100; combo++; hit = true;
+                } else if (diff <= 38) {
+                    setJudgeUI("Great!", "#333");
+                    score += 50; combo++; hit = true;
+                } else if (diff <= 58) {
+                    setJudgeUI("Good", "#666");
+                    score += 20; combo++; hit = true;
+                }
+
+                if (hit) {
+                    document.getElementById('txt-score').innerText = `SCORE: ${score}`;
+                    document.getElementById('txt-combo').innerText = `COMBO: ${combo}`;
+                    if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
+                    activeNotes.splice(targetIdx, 1);
+                }
             }
         }
-        if (targetIdx === -1) return;
+    });
 
-        const targetNote = activeNotes[targetIdx];
-        const diff = Math.abs(targetNote.y - JUDGMENT_LINE_Y);
-        let scored = false;
-
-        if (diff <= 16) {
-            updateJudgmentUI("Perfect!", "#000000");
-            score += 100; combo++; scored = true;
-        } else if (diff <= 36) {
-            updateJudgmentUI("Great!", "#333333");
-            score += 50; combo++; scored = true;
-        } else if (diff <= 56) {
-            updateJudgmentUI("Good", "#666666");
-            score += 20; combo++; scored = true;
+    window.addEventListener('keyup', (e) => {
+        const k = e.key.toLowerCase();
+        const idx = KEY_CHARS.indexOf(k);
+        if (idx !== -1) {
+            const lane = document.getElementById(`lane-${idx}`);
+            if (lane) lane.classList.remove('active');
         }
+    });
 
-        if (scored) {
-            document.getElementById('score-display').innerText = `SCORE: ${score}`;
-            document.getElementById('combo-display').innerText = `COMBO: ${combo}`;
-            if (targetNote.element.parentNode) targetNote.element.parentNode.removeChild(targetNote.element);
-            activeNotes.splice(targetIdx, 1);
-        }
-    }
-
-    function updateJudgmentUI(text, color) {
-        const el = document.getElementById('judgment-text');
+    function setJudgeUI(text, color) {
+        const el = document.getElementById('txt-judge');
         el.innerText = text;
         el.style.color = color;
     }
 
-    function stopGameLoops() {
+    function stopGame() {
         isPlaying = false;
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
-        if (gameTimerId) clearInterval(gameTimerId);
+        if (frameId) cancelAnimationFrame(frameId);
+        if (timerId) clearInterval(timerId);
     }
 
-    function clickResetButton() {
-        if (countdownIntervalId) clearInterval(countdownIntervalId);
-        isCountingDown = false;
-        resetPlayGame(); 
-        if (playerPlay && typeof playerPlay.seekTo === 'function') {
-            playerPlay.seekTo(0, true);
-            playerPlay.pauseVideo();
-        }
-    }
-
-    function resetPlayGame() {
-        stopGameLoops();
+    function resetGame() {
+        stopGame();
         score = 0;
         combo = 0;
-        nextNoteIndex = 0;
-        document.getElementById('score-display').innerText = "SCORE: 0";
-        document.getElementById('combo-display').innerText = "COMBO: 0";
-        document.getElementById('judgment-text').innerText = "";
-        activeNotes.forEach(note => {
-            if (note.element && note.element.parentNode) note.element.parentNode.removeChild(note.element);
+        noteIndex = 0;
+        document.getElementById('txt-score').innerText = "SCORE: 0";
+        document.getElementById('txt-combo').innerText = "COMBO: 0";
+        document.getElementById('txt-judge').innerText = "";
+        activeNotes.forEach(n => {
+            if (n.element && n.element.parentNode) n.element.parentNode.removeChild(n.element);
         });
         activeNotes = [];
     }
