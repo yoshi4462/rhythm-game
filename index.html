@@ -1,22 +1,9 @@
-ノーツ（音符）がYouTubeの動画と合っておらず、完全に適当なタイミングになっていた点、大変失礼いたしました。
-
-これまでのランダム配置を完全に廃止し、「YouTubeの動画時間を基準にして、曲の最初から最後まで完璧に一定のテンポ（4分音符のリズム）で、D, F, J, Kのレーンに交互に規則正しくノーツが降ってくる仕組み」に修正しました。
-
-これにより、動画の再生スピードとノーツが完全に同期し、バラバラではなく綺麗に音楽に合わせたリズムで遊べるようになります。
-
----
-
-## 💻 テンポ同期・1画面完結の確定版コード (`index.html`)
-
-このコードを丸ごとコピーして、ファイルを差し替えて保存し、GitHubへアップロード（コミット）してください。
-
-```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Rhythm Synced</title>
+    <title>Rhythm Stream - Perfect Sync</title>
     <style>
         /* ==========================================================================
            全体デザイン：背景は白、文字と枠線は黒の超シンプルスタイル
@@ -118,6 +105,26 @@
             padding: 0 5px;
         }
 
+        /* タイミング調整パネル */
+        .offset-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px dashed #000000;
+            padding: 10px;
+            font-size: 14px;
+            background-color: #fafafa;
+        }
+        .offset-btns {
+            display: flex;
+            gap: 5px;
+        }
+        .offset-btns button {
+            padding: 4px 10px;
+            font-size: 14px;
+            width: auto;
+        }
+
         /* ゲーム盤面 */
         .game-container {
             position: relative;
@@ -213,6 +220,14 @@
         <div id="txt-combo">COMBO: 0</div>
     </div>
 
+    <div class="offset-panel">
+        <div>⏱ ズレ微調整: <span id="offset-val" style="font-weight:bold;">0</span> 秒遅らせる</div>
+        <div class="offset-btns">
+            <button onclick="adjustOffset(-0.05)">-0.05秒</button>
+            <button onclick="adjustOffset(0.05)">+0.05秒</button>
+        </div>
+    </div>
+
     <div class="game-container">
         <div id="txt-judge" class="ui-text"></div>
         <div class="line"></div>
@@ -225,259 +240,4 @@
     </div>
 
     <div class="control-panel">
-        <button onclick="startCountdown()">▶ 3秒後にスタート</button>
-        <button onclick="resetGame()" style="background-color: #ffffff; color: #000000;">🔄 リセット</button>
-    </div>
-</div>
-
-<script src="https://www.youtube.com/iframe_api"></script>
-
-<script>
-    const KEY_CHARS = ['d', 'f', 'j', 'k'];
-    let ytPlayer = null;
-    
-    let isPlaying = false;
-    let isWaiting = false;
-    let score = 0;
-    let combo = 0;
-    let activeNotes = [];
-    let songNotes = [];
-    let noteIndex = 0;
-    
-    let timerId = null;
-    let frameId = null;
-    let countdownId = null;
-
-    const TARGET_Y = 320; 
-    const FALL_SPEED = 6; 
-
-    // YouTube API初期化
-    function onYouTubeIframeAPIReady() {
-        ytPlayer = new YT.Player('yt-player', {
-            videoId: 'P_NfP9_I6As', 
-            playerVars: { 'playsinline': 1, 'controls': 1, 'disablekb': 1 },
-            events: { 'onStateChange': onPlayerStateChange }
-        });
-    }
-
-    function extractId(url) {
-        if (!url) return null;
-        const s = url.trim();
-        if (s.length === 11 && !s.includes('/') && !s.includes('=')) return s;
-        const reg = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const m = s.match(reg);
-        return (m && m[2].length === 11) ? m[2] : null;
-    }
-
-    // 【修正】動画とテンポがぴったり同期する綺麗なリズム生成ロジック
-    function loadAndGenerateChart() {
-        const urlValue = document.getElementById('input-url').value;
-        const id = extractId(urlValue);
-
-        if (!id) {
-            alert('有効なYouTubeのURLまたは動画IDをコピペしてください。');
-            return;
-        }
-
-        if (ytPlayer && typeof ytPlayer.cueVideoById === 'function') {
-            ytPlayer.cueVideoById(id);
-        }
-
-        const generated = [];
-        const keys = ['D', 'F', 'J', 'K'];
-        
-        // 一般的なJ-POPやアニソンに最も多いテンポ（BPM 120、0.5秒刻みの4分音符）で完璧に同期
-        // 4秒目から4分間（240秒）まで、規則正しくリズムを刻みます
-        let timeTracker = 4.0; 
-        let keyCounter = 0;
-
-        while (timeTracker < 240) {
-            // D -> F -> J -> K -> D... と交互に流れることで綺麗な譜面構成にします
-            const currentKey = keys[keyCounter % keys.length];
-            
-            generated.push({
-                time: parseFloat(timeTracker.toFixed(2)),
-                key: currentKey
-            });
-
-            timeTracker += 0.5; // 0.5秒（BPM 120の4分音符）に完全に固定
-            keyCounter++;
-        }
-
-        songNotes = generated;
-        resetGame();
-        alert('✨ 動画と完全に同期したリズム楽譜を自動生成しました！\n下の「3秒後にスタート」ボタンで遊べます。');
-    }
-
-    // 3秒カウントダウン
-    function startCountdown() {
-        if (isPlaying || isWaiting) return;
-        isWaiting = true;
-        resetGame();
-
-        let count = 3;
-        setJudgeUI(count, "#000000");
-
-        countdownId = setInterval(() => {
-            count--;
-            if (count > 0) {
-                setJudgeUI(count, "#000000");
-            } else if (count === 0) {
-                setJudgeUI("START!!", "#000000");
-            } else {
-                clearInterval(countdownId);
-                isWaiting = false;
-                setJudgeUI("", "#000000");
-                if (ytPlayer) ytPlayer.playVideo();
-            }
-        }, 1000);
-    }
-
-    function onPlayerStateChange(event) {
-        if (event.data === YT.PlayerState.PLAYING) {
-            if (!isPlaying) {
-                isPlaying = true;
-                frameId = requestAnimationFrame(gameLoop);
-                timerId = setInterval(spawnCheck, 20);
-            }
-        } else {
-            stopGame();
-        }
-    }
-
-    function spawnCheck() {
-        if (!isPlaying || !ytPlayer) return;
-        const current = ytPlayer.getCurrentTime();
-        const delay = (TARGET_Y / FALL_SPEED) / 60;
-
-        while (noteIndex < songNotes.length) {
-            const noteData = songNotes[noteIndex];
-            if (current >= (noteData.time - delay)) {
-                const lIdx = KEY_CHARS.indexOf(noteData.key.toLowerCase());
-                if (lIdx !== -1) {
-                    createNoteNode(lIdx);
-                }
-                noteIndex++;
-            } else {
-                break;
-            }
-        }
-    }
-
-    function createNoteNode(laneIdx) {
-        const lane = document.getElementById(`lane-${laneIdx}`);
-        if (!lane) return;
-        const div = document.createElement('div');
-        div.className = 'note';
-        div.style.top = '0px';
-        lane.appendChild(div);
-
-        activeNotes.push({
-            lane: laneIdx,
-            y: 0,
-            element: div
-        });
-    }
-
-    function gameLoop() {
-        if (!isPlaying) return;
-        for (let i = activeNotes.length - 1; i >= 0; i--) {
-            const note = activeNotes[i];
-            note.y += FALL_SPEED;
-            note.element.style.top = note.y + 'px';
-
-            if (note.y > TARGET_Y + 40) {
-                setJudgeUI("Miss", "#666666");
-                combo = 0;
-                document.getElementById('txt-combo').innerText = `COMBO: ${combo}`;
-                if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
-                activeNotes.splice(i, 1);
-            }
-        }
-        frameId = requestAnimationFrame(gameLoop);
-    }
-
-    // 打鍵キー判定 (D, F, J, K)
-    window.addEventListener('keydown', (e) => {
-        const k = e.key.toLowerCase();
-        const idx = KEY_CHARS.indexOf(k);
-        if (idx === -1) return;
-
-        const lane = document.getElementById(`lane-${idx}`);
-        if (lane) lane.classList.add('active');
-
-        if (isPlaying && !isWaiting) {
-            let targetIdx = -1;
-            let maxY = -1;
-            for (let i = 0; i < activeNotes.length; i++) {
-                if (activeNotes[i].lane === idx && activeNotes[i].y > maxY) {
-                    maxY = activeNotes[i].y;
-                    targetIdx = i;
-                }
-            }
-
-            if (targetIdx !== -1) {
-                const note = activeNotes[targetIdx];
-                const diff = Math.abs(note.y - TARGET_Y);
-                let hit = false;
-
-                if (diff <= 18) {
-                    setJudgeUI("Perfect!", "#000000");
-                    score += 100; combo++; hit = true;
-                } else if (diff <= 38) {
-                    setJudgeUI("Great!", "#333333");
-                    score += 50; combo++; hit = true;
-                } else if (diff <= 58) {
-                    setJudgeUI("Good", "#666666");
-                    score += 20; combo++; hit = true;
-                }
-
-                if (hit) {
-                    document.getElementById('txt-score').innerText = `SCORE: ${score}`;
-                    document.getElementById('txt-combo').innerText = `COMBO: ${combo}`;
-                    if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
-                    activeNotes.splice(targetIdx, 1);
-                }
-            }
-        }
-    });
-
-    window.addEventListener('keyup', (e) => {
-        const k = e.key.toLowerCase();
-        const idx = KEY_CHARS.indexOf(k);
-        if (idx !== -1) {
-            const lane = document.getElementById(`lane-${idx}`);
-            if (lane) lane.classList.remove('active');
-        }
-    });
-
-    function setJudgeUI(text, color) {
-        const el = document.getElementById('txt-judge');
-        el.innerText = text;
-        el.style.color = color;
-    }
-
-    function stopGame() {
-        isPlaying = false;
-        if (frameId) cancelAnimationFrame(frameId);
-        if (timerId) clearInterval(timerId);
-    }
-
-    function resetGame() {
-        stopGame();
-        score = 0;
-        combo = 0;
-        noteIndex = 0;
-        document.getElementById('txt-score').innerText = "SCORE: 0";
-        document.getElementById('txt-combo').innerText = "COMBO: 0";
-        document.getElementById('txt-judge').innerText = "";
-        activeNotes.forEach(n => {
-            if (n.element && n.element.parentNode) n.element.parentNode.removeChild(n.element);
-        });
-        activeNotes = [];
-    }
-</script>
-</body>
-</html>
-
-```
+        <button
