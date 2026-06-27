@@ -352,7 +352,7 @@
 
             <div class="play-controls">
                 <button id="btn-play-start" onclick="startPlayGame()">▶ 曲を再生してスタート</button>
-                <button onclick="resetPlayGame()">🔄 リセット</button>
+                <button onclick="clickResetButton()">🔄 リセット</button>
             </div>
         </div>
     </div>
@@ -400,7 +400,7 @@
 
 <script>
     // 定数・グローバル変数
-    const DEFAULT_ID = 'P_NfP9_I6As'; // 初期表示用 (WANIMA)
+    const DEFAULT_ID = 'P_NfP9_I6As'; 
     const KEYS = ['d', 'f', 'j', 'k'];
     
     let playerPlay = null;
@@ -417,8 +417,8 @@
     let nextNoteIndex = 0;
     let gameTimerId = null;
     let animationFrameId = null;
-    const JUDGMENT_LINE_Y = 390; // 判定線の位置
-    const NOTE_SPEED = 6;        // ノーツが落ちる速度
+    const JUDGMENT_LINE_Y = 390; 
+    const NOTE_SPEED = 6;        
 
     // 打ち込み用変数
     let recordedNotes = [];
@@ -429,7 +429,6 @@
         renderChartList();
     });
 
-    // 最初にサンプル用として1曲登録しておく処理
     function setupDefaultChart() {
         if (!localStorage.getItem('stream_charts')) {
             const sample = [{
@@ -492,7 +491,6 @@
 
         document.getElementById('play-song-title').innerText = `🎵 演奏中：${target.title}`;
         currentPlayVideoId = target.videoId;
-        // 時間軸の昇順（早い順）にソートして読み込み
         loadedChartNotes = target.notes.sort((a, b) => a.time - b.time);
 
         if (playerPlay && typeof playerPlay.cueVideoById === 'function') {
@@ -501,7 +499,6 @@
         switchScreen('play');
     }
 
-    // TypingTube風 完成・自動保存ボタン
     function saveNewChart() {
         const title = document.getElementById('edit-title').value.trim();
         if (!title) {
@@ -526,7 +523,6 @@
 
         alert(`楽譜「${title}」の保存が完了しました！トップ一覧に追加されます。`);
         
-        // 入力フォームとログを綺麗に初期化
         clearEditorLogs();
         document.getElementById('edit-title').value = '';
         document.getElementById('edit-url').value = '';
@@ -593,9 +589,6 @@
         }
     }
 
-    // ==========================================================================
-    // リアルタイム打ち込み（エディタ）システム
-    // ==========================================================================
     function playEditorVideo() { if (playerEdit) playerEdit.playVideo(); }
     function pauseEditorVideo() { if (playerEdit) playerEdit.pauseVideo(); }
     function clearEditorLogs() {
@@ -604,21 +597,19 @@
     }
 
     // ==========================================================================
-    // キーボード入力の検知（プレイ＆エディタ共通）
+    // キーボード入力の検知
     // ==========================================================================
     window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
         const keyIndex = KEYS.indexOf(key);
         if (keyIndex === -1) return;
 
-        // 1. プレイ中の処理
         if (document.getElementById('screen-play').classList.contains('active')) {
             const lane = document.getElementById(`lane-play-${keyIndex}`);
             if (lane) lane.classList.add('active');
             if (isPlaying) checkHitJudgment(keyIndex);
         }
 
-        // 2. 打ち込み中（エディタ）の処理
         if (document.getElementById('screen-edit').classList.contains('active') && playerEdit) {
             if (playerEdit.getPlayerState() === YT.PlayerState.PLAYING) {
                 const time = playerEdit.getCurrentTime();
@@ -627,13 +618,12 @@
                     key: key.toUpperCase()
                 });
 
-                // 画面右側に打ち込みログを表示
                 const logArea = document.getElementById('log-area');
                 const log = document.createElement('div');
                 log.className = 'log-entry';
                 log.innerText = `${time.toFixed(2)}秒: [${key.toUpperCase()}]`;
                 logArea.appendChild(log);
-                logArea.scrollTop = logArea.scrollHeight; // 最下部へスクロール
+                logArea.scrollTop = logArea.scrollHeight;
             }
         }
     });
@@ -652,7 +642,7 @@
     // ==========================================================================
     function startPlayGame() {
         if (!playerPlay) return;
-        resetPlayGame();
+        // リセット状態からそのまま再生
         playerPlay.playVideo();
     }
 
@@ -660,9 +650,8 @@
         if (event.data === YT.PlayerState.PLAYING) {
             if (!isPlaying) {
                 isPlaying = true;
-                nextNoteIndex = 0;
                 animationFrameId = requestAnimationFrame(gameRenderLoop);
-                gameTimerId = setInterval(checkSpawnNotes, 20); // 20ms感覚で緻密にチェック
+                gameTimerId = setInterval(checkSpawnNotes, 20);
             }
         } else {
             stopGameLoops();
@@ -672,8 +661,6 @@
     function checkSpawnNotes() {
         if (!isPlaying || !playerPlay) return;
         const currentTime = playerPlay.getCurrentTime();
-        
-        // ノーツが上から判定線に到達するまでの時間（ラグ落下の相殺計算）
         const fallLag = (JUDGMENT_LINE_Y / NOTE_SPEED) / 60;
 
         while (nextNoteIndex < loadedChartNotes.length) {
@@ -687,6 +674,16 @@
             } else {
                 break;
             }
+        }
+
+        // 【新機能】すべてのノーツを生成し終え、かつ画面上にもうノーツが残っていない場合
+        if (nextNoteIndex >= loadedChartNotes.length && activeNotes.length === 0) {
+            setTimeout(() => {
+                if (playerPlay && typeof playerPlay.pauseVideo === 'function') {
+                    playerPlay.pauseVideo(); // 動画を自動停止
+                    updateJudgmentUI("CLEAR!!", "#00cc00");
+                }
+            }, 500);
         }
     }
 
@@ -713,7 +710,6 @@
             note.y += NOTE_SPEED;
             note.element.style.top = note.y + 'px';
 
-            // 判定線を完全に通り過ぎてスルーした場合 (Miss)
             if (note.y > JUDGMENT_LINE_Y + 40) {
                 updateJudgmentUI("Miss", "#888888");
                 combo = 0;
@@ -730,7 +726,6 @@
         let targetIdx = -1;
         let lowestY = -1;
 
-        // 押されたレーンの中で、一番判定線に近い（一番下にある）ノーツを探す
         for (let i = 0; i < activeNotes.length; i++) {
             if (activeNotes[i].lane === laneIndex && activeNotes[i].y > lowestY) {
                 lowestY = activeNotes[i].y;
@@ -773,6 +768,17 @@
         isPlaying = false;
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
         if (gameTimerId) clearInterval(gameTimerId);
+    }
+
+    // 【改良】ユーザーが「リセットボタン」を押したときの処理
+    function clickResetButton() {
+        resetPlayGame(); // ゲーム情報を初期化
+        
+        // YouTube動画を0秒（最初）に戻して、一時停止状態にする
+        if (playerPlay && typeof playerPlay.seekTo === 'function') {
+            playerPlay.seekTo(0, true);
+            playerPlay.pauseVideo();
+        }
     }
 
     function resetPlayGame() {
