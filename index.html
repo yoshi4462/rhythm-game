@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Auto Generator</title>
+    <title>Rhythm Stream - Auto Generator Fixed</title>
     <style>
         /* ==========================================================================
            全体デザイン（ミニマル・モノトーン＋ネオン）
@@ -320,6 +320,12 @@
             padding: 4px 0;
         }
 
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
         .save-section {
             margin-top: 30px;
             border-top: 2px solid #ffffff;
@@ -391,23 +397,27 @@
         <button class="back-btn" onclick="switchScreen('top')">← キャンセル</button>
         
         <div class="editor-form">
-            <h3>1. 楽曲の設定（URLを入れると勝手に音符が作られます！）</h3>
+            <h3>1. 楽曲の設定</h3>
             <input type="text" id="edit-title" placeholder="曲のタイトルを入力してください">
             <input type="text" id="edit-url" placeholder="YouTubeの動画URL または 動画ID を入力">
-            <button onclick="loadEditorVideo()" style="align-self: flex-start; padding: 8px 16px; font-size:14px; background-color:#00ff66; color:#000; border-color:#00ff66;">🎵 動画の読み込み＆音符を自動生成</button>
+            
+            <div class="action-bar">
+                <button onclick="loadEditorVideo()" style="padding: 10px 20px; font-size:14px; background-color:#ffffff; color:#000;">① 動画を読み込む</button>
+                <button onclick="clickGenerateButton()" style="padding: 10px 20px; font-size:14px; background-color:#00ff66; color:#000; border-color:#00ff66;">② 音符を自動生成する</button>
+            </div>
         </div>
 
         <div class="editor-workspace">
             <div class="editor-left">
                 <h3>2. 生成されたプレビュー・手動修正</h3>
                 <p style="font-size: 13px; color: #aaa; margin-bottom: 10px;">
-                    自動生成された後に動画を再生しながら【D, F, J, K】を押して、さらに音符を追加することも可能です！
+                    自動生成ボタンを押した後に動画を再生しながら【D, F, J, K】キーを押すと、さらに自由に音符を追加できます。
                 </p>
                 <div class="video-container">
                     <div id="youtube-player-edit"></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button onclick="playEditorVideo()">▶ 動画を確認再生</button>
+                    <button onclick="playEditorVideo()">▶ 動画を再生</button>
                     <button onclick="pauseEditorVideo()">⏸ 一時停止</button>
                     <button onclick="clearEditorLogs()" style="background:#222; color:#fff; border-color:#fff;">🔄 最初からやり直す</button>
                 </div>
@@ -540,11 +550,11 @@
     function saveNewChart() {
         const title = document.getElementById('edit-title').value.trim();
         if (!title) {
-            alert('保存するには、曲のタイトルを最初に入力してください。');
+            alert('保存するには、曲のタイトルを入力してください。');
             return;
         }
         if (recordedNotes.length === 0) {
-            alert('ノーツデータがありません。');
+            alert('ノーツデータがありません。「② 音符を自動生成する」ボタンを押してノーツを作ってください。');
             return;
         }
         const newChart = {
@@ -572,16 +582,11 @@
         return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // 【核心機能】動画読み込み時に自動で譜面（音符）を作成する
+    // ①動画の読み込み処理
     function loadEditorVideo() {
-        const titleInput = document.getElementById('edit-title').value.trim();
         const urlInput = document.getElementById('edit-url').value;
         const id = extractVideoId(urlInput);
         
-        if (!titleInput) {
-            alert('先に「曲のタイトル」を入力してください！');
-            return;
-        }
         if (!id) {
             alert('有効なYouTubeのURLまたは動画IDを入力してください。');
             return;
@@ -593,32 +598,41 @@
         if (playerEdit && typeof playerEdit.cueVideoById === 'function') {
             playerEdit.cueVideoById(currentEditVideoId);
         }
-
-        // YouTubeプレーヤーのメタデータ読み込みを少し待ってから、自動ノーツを生成
-        setTimeout(() => {
-            generateAutoNotes();
-        }, 1200);
+        alert('動画を読み込みました！プレイヤーに動画が表示されたら「② 音符を自動生成する」を押してください。');
     }
 
-    // 【自動生成アルゴリズム】動画の長さをもとに、ランダムかつリズム良くノーツを生成する
-    function generateAutoNotes() {
-        let duration = 300; // 万が一動画の長さが取れなかった場合の初期値（5分分）
-        if (playerEdit && typeof playerEdit.getDuration === 'function') {
-            const ytDuration = playerEdit.getDuration();
-            if (ytDuration > 10) duration = ytDuration;
+    // ②自動生成ボタンをクリックしたときの処理
+    function clickGenerateButton() {
+        const titleInput = document.getElementById('edit-title').value.trim();
+        if (!titleInput) {
+            alert('先に「曲のタイトル」を入力してください！');
+            return;
         }
 
+        let duration = 0;
+        if (playerEdit && typeof playerEdit.getDuration === 'function') {
+            duration = playerEdit.getDuration();
+        }
+
+        // 読み込みが未完了で動画長が0秒の場合のフォールバック
+        if (duration <= 0) {
+            alert('動画の準備がまだ整っていないか、読み込まれていません。動画プレイヤーにサムネイルが表示されるまで数秒待ってから、もう一度このボタンを押してください。');
+            return;
+        }
+
+        generateAutoNotes(duration);
+    }
+
+    // 実際に自動生成ロジックを走らせる関数
+    function generateAutoNotes(duration) {
         recordedNotes = [];
         const logArea = document.getElementById('log-area');
         logArea.innerHTML = '';
 
-        // 一般的な曲のテンポ（例: 0.4秒〜0.6秒間隔）で機械的にノーツを配置
-        // 最初の4秒はイントロの猶予として空ける
-        let currentTime = 4.0;
+        let currentTime = 4.0; // イントロ用猶予
         const keysList = ['D', 'F', 'J', 'K'];
 
         while (currentTime < duration - 3) {
-            // ランダムにキーを選択
             const randomKey = keysList[Math.floor(Math.random() * keysList.length)];
             
             recordedNotes.push({
@@ -631,13 +645,13 @@
             log.innerText = `${currentTime.toFixed(2)}秒: [${randomKey}] (自動生成)`;
             logArea.appendChild(log);
 
-            // 次のノーツまでの間隔（リズムが崩れすぎないよう0.4〜0.8秒の間でランダムに）
+            // 0.4秒〜0.8秒の間隔でテンポよくノーツを配置
             const nextGap = 0.4 + (Math.floor(Math.random() * 3) * 0.2); 
             currentTime += nextGap;
         }
         
         logArea.scrollTop = 0;
-        alert('✨ お待たせしました！YouTube動画から、ネオン音符を自動で1曲分生成しました！下の青い保存ボタンを押せば、すぐにプレイリストに登録されます！');
+        alert(`✨ 成功！ ${duration.toFixed(0)}秒の動画から自動的に音符を生成しました！下の水色の保存ボタンを押して保存しましょう！`);
     }
 
     function onYouTubeIframeAPIReady() {
