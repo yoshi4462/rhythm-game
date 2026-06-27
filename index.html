@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rhythm Stream - Pure Auto Player</title>
+    <title>Rhythm Stream - Ultimate White Edition</title>
     <style>
         /* ==========================================================================
-           全体デザイン：白を基調とした超シンプル・ミニマルスタイル
+           全体デザイン：背景は白、文字と枠線は黒の超シンプルスタイル
            ========================================================================== */
         * {
             box-sizing: border-box;
@@ -33,7 +33,7 @@
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 26px;
             text-align: center;
             margin-bottom: 25px;
             letter-spacing: 2px;
@@ -50,7 +50,7 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
 
         button:hover {
@@ -70,21 +70,28 @@
         }
 
         /* ==========================================================================
-           【画面1】トップ画面（URL入力 ＆ 楽曲リスト）
+           【画面1】トップ画面（URL入力フォーム ＆ 楽曲リスト）
            ========================================================================== */
         .input-box {
-            border: 1px solid #000000;
+            border: 2px solid #000000;
             padding: 20px;
-            background-color: #f9f9f9;
+            background-color: #ffffff;
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        .input-box h3 {
+            font-size: 16px;
+            font-weight: bold;
         }
 
         .input-box input {
             padding: 12px;
             font-size: 15px;
             border: 1px solid #000000;
+            background-color: #ffffff;
+            color: #000000;
             outline: none;
             width: 100%;
         }
@@ -92,7 +99,7 @@
         .list-title {
             font-size: 18px;
             font-weight: bold;
-            margin-top: 10px;
+            margin-top: 15px;
             border-bottom: 1px solid #000000;
             padding-bottom: 5px;
         }
@@ -243,18 +250,18 @@
 
     <div id="view-top" class="screen active">
         <div class="input-box">
-            <h3 style="font-size: 16px;">🎵 新しい曲を自動生成して追加</h3>
-            <input type="text" id="input-title" placeholder="曲のタイトルを入力">
+            <h3>✨ URLから楽譜を自動生成する</h3>
+            <input type="text" id="input-title" placeholder="曲のタイトルを入力してください">
             <input type="text" id="input-url" placeholder="YouTubeの動画URL または 動画ID を入力">
-            <button onclick="generateNewChart()">⚡ 音符を全自動生成して保存</button>
+            <button onclick="generateNewChart()">⚡ 音符を全自動生成してリストに保存</button>
         </div>
 
-        <div class="list-title">📋 作成された楽譜リスト</div>
+        <div class="list-title">📋 登録された楽譜リスト</div>
         <div id="list-container" class="song-list"></div>
     </div>
 
     <div id="view-play" class="screen">
-        <button onclick="toTopView()" style="background-color: #ffffff; color: #000; border-color: #000; align-self: flex-start; padding: 6px 12px; font-size: 14px;">← リストに戻る</button>
+        <button onclick="toTopView()" style="background-color: #ffffff; color: #000000; border-color: #000000; align-self: flex-start; padding: 6px 12px; font-size: 14px;">← リストに戻る</button>
         
         <h2 id="play-title" style="text-align: center; font-size: 18px;">-</h2>
         
@@ -280,7 +287,7 @@
 
         <div class="control-panel">
             <button onclick="readyToPlay()">▶ 3秒後にスタート</button>
-            <button onclick="resetGame()" style="background-color: #ffffff; color: #000;">🔄 リセット</button>
+            <button onclick="resetGame()" style="background-color: #ffffff; color: #000000;">🔄 リセット</button>
         </div>
     </div>
 </div>
@@ -338,7 +345,7 @@
         const songs = JSON.parse(localStorage.getItem('rhythm_songs')) || [];
 
         if (songs.length === 0) {
-            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px; font-size:14px;">楽譜がありません。上のフォームから追加してください。</p>';
+            container.innerHTML = '<p style="color:#666; text-align:center; padding:20px; font-size:14px;">楽譜がありません。上の入力フォームから追加してください。</p>';
             return;
         }
 
@@ -368,7 +375,7 @@
         return (m && m[2].length === 11) ? m[2] : null;
     }
 
-    // URLから全自動で音符を作るコア処理
+    // 全自動音符生成ロジック
     function generateNewChart() {
         const title = document.getElementById('input-title').value.trim();
         const urlValue = document.getElementById('input-url').value;
@@ -377,18 +384,17 @@
         if (!title) { alert('曲のタイトルを入力してください！'); return; }
         if (!id) { alert('正しいYouTubeのURLまたは動画IDを入力してください。'); return; }
 
-        // 完全自動のランダム生成ロジック（4分間分、D F J Kのキーをちりばめる）
         const generated = [];
         let timeTracker = 4.0; 
         const keys = ['D', 'F', 'J', 'K'];
 
+        // 4分間分のリズムノーツをD, F, J, Kに自動分散配置
         while (timeTracker < 240) {
             const randomKey = keys[Math.floor(Math.random() * keys.length)];
             generated.push({
                 time: parseFloat(timeTracker.toFixed(2)),
                 key: randomKey
             });
-            // 0.4秒〜0.8秒の間隔でランダムに次のノーツを配置
             timeTracker += 0.4 + (Math.floor(Math.random() * 3) * 0.2);
         }
 
@@ -403,7 +409,7 @@
         songs.push(newSong);
         localStorage.setItem('rhythm_songs', JSON.stringify(songs));
 
-        alert(`✨ 「${title}」の音符データを全自動生成して保存しました！`);
+        alert(`🎉 「${title}」の音符データを全自動生成しました！\n下のリストからいつでも遊べます。`);
         
         document.getElementById('input-title').value = '';
         document.getElementById('input-url').value = '';
@@ -460,18 +466,18 @@
         resetGame();
 
         let count = 3;
-        setJudgeUI(count, "#000");
+        setJudgeUI(count, "#000000");
 
         countdownId = setInterval(() => {
             count--;
             if (count > 0) {
-                setJudgeUI(count, "#000");
+                setJudgeUI(count, "#000000");
             } else if (count === 0) {
-                setJudgeUI("START!!", "#000");
+                setJudgeUI("START!!", "#000000");
             } else {
                 clearInterval(countdownId);
                 isWaiting = false;
-                setJudgeUI("", "#000");
+                setJudgeUI("", "#000000");
                 if (ytPlayer) ytPlayer.playVideo();
             }
         }, 1000);
@@ -531,7 +537,7 @@
             note.element.style.top = note.y + 'px';
 
             if (note.y > TARGET_Y + 40) {
-                setJudgeUI("Miss", "#666");
+                setJudgeUI("Miss", "#666666");
                 combo = 0;
                 document.getElementById('txt-combo').innerText = `COMBO: ${combo}`;
                 if (note.element.parentNode) note.element.parentNode.removeChild(note.element);
@@ -541,7 +547,6 @@
         frameId = requestAnimationFrame(gameLoop);
     }
 
-    // キー入力の判定
     window.addEventListener('keydown', (e) => {
         const k = e.key.toLowerCase();
         const idx = KEY_CHARS.indexOf(k);
@@ -567,13 +572,13 @@
                 let hit = false;
 
                 if (diff <= 18) {
-                    setJudgeUI("Perfect!", "#000");
+                    setJudgeUI("Perfect!", "#000000");
                     score += 100; combo++; hit = true;
                 } else if (diff <= 38) {
-                    setJudgeUI("Great!", "#333");
+                    setJudgeUI("Great!", "#333333");
                     score += 50; combo++; hit = true;
                 } else if (diff <= 58) {
-                    setJudgeUI("Good", "#666");
+                    setJudgeUI("Good", "#666666");
                     score += 20; combo++; hit = true;
                 }
 
