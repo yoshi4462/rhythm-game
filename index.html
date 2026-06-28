@@ -23,7 +23,6 @@
         #ui-overlay { position: absolute; top: 20%; width: 100%; text-align: center; pointer-events: none; z-index: 20; }
         #judge-text { font-size: 28px; font-weight: bold; height: 35px; }
         #combo-text { font-size: 20px; color: #feca57; }
-        audio { width: 360px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -54,12 +53,13 @@
             </div>
             <div id="judge-line"></div>
         </div>
-        <audio id="audio-player" controls></audio>
     </div>
 
 <script>
 var audioCtx;
-var audioPlayer = document.getElementById('audio-player');
+var audioBuffer = null;
+var audioSource = null;
+var startTime = 0;
 var chart = [];
 var combo = 0;
 var isPlaying = false;
@@ -70,19 +70,16 @@ function handleFileSelect(event) {
     if (!file) return;
 
     document.getElementById('status').innerText = "ブラウザAIが楽曲を解析中...（数秒かかります）";
-    document.getElementById('start-btn').style.display = 'none'; // 一旦隠す
+    document.getElementById('start-btn').style.display = 'none';
     resetGame();
-
-    var fileURL = URL.createObjectURL(file);
-    audioPlayer.src = fileURL;
 
     var reader = new FileReader();
     reader.onload = function(e) {
-        // ここでAudioContextを初期化（まだ保留状態）
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
         audioCtx.decodeAudioData(e.target.result, function(buffer) {
+            audioBuffer = buffer; // 音データを保存
             analyzeAudio(buffer);
         });
     };
@@ -112,9 +109,6 @@ function analyzeAudio(buffer) {
         var time = (i * frameSize) / sampleRate;
         
         if (energies[i] > energies[i - 1] && energies[i] > energies[i + 1] && energies[i] > (maxEnergy * 0.07)) {
-            
-            // 【少しマイルドに調整】
-            // 最短間隔を 0.04秒 から 0.08秒 に変更して、人間がギリギリ叩ける高密度に手加減
             if (time - lastNoteTime > 0.08) {
                 var lane = lanes[Math.floor(Math.random() * lanes.length)];
                 chart.push({
@@ -128,58 +122,61 @@ function analyzeAudio(buffer) {
         }
     }
 
-    document.getElementById('status').innerText = "解析完了！総ノーツ数: " + chart.length + " です。下の緑のボタンを押して開始してください！";
-    document.getElementById('start-btn').style.display = 'block'; // ボタンを表示
+    document.getElementById('status').innerText = "解析完了！総ノーツ数: " + chart.length + " です。スタートボタンを押してください！";
+    document.getElementById('start-btn').style.display = 'block';
 }
 
-// ボタンを押した瞬間にブラウザの音ブロックを解除して再生する
+// 【新システム】ブラウザのスピーカーへ直接音声を流し込む
 function startGame() {
-    // ボタンを押した瞬間に、ブラウザの音声機能を「強制的に」アクティブにする
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    if (!audioBuffer || !audioCtx) return;
+
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
+
+    // 新しい再生ノードを作成してスピーカーに接続
+    audioSource = audioCtx.createBufferSource();
+    audioSource.buffer = audioBuffer;
+    audioSource.connect(audioCtx.destination);
     
-    // プレイヤーの音量を最大(1.0)にして再生
-    audioPlayer.volume = 1.0; 
-    audioPlayer.play().catch(function(error) {
-        console.error("再生エラー:", error);
-        alert("ブラウザが音の再生をブロックしました。もう一度ボタンを押すか、画面を一度クリックしてください。");
-    });
+    // 再生開始
+    audioSource.start(0);
+    startTime = audioCtx.currentTime; // 開始時間を記録
+    isPlaying = true;
     
     document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('status').innerText = "演奏中！";
+    
+    // ゲームループ開始
+    updateGame();
+
+    // 曲が終わったときの処理
+    audioSource.onended = function() {
+        isPlaying = false;
+        showVerdict("FINISH!", "#feca57");
+    };
 }
 
 function resetGame() {
+    if (audioSource) {
+        try { audioSource.stop(); } catch(e) {}
+    }
     chart = [];
     combo = 0;
+    isPlaying = false;
     document.getElementById('judge-text').innerText = "";
     document.getElementById('combo-text').innerText = "";
     document.querySelectorAll('.note').forEach(n => n.remove());
 }
 
-audioPlayer.addEventListener('play', function() {
-    isPlaying = true;
-    updateGame();
-});
-
-audioPlayer.addEventListener('pause', function() {
-    isPlaying = false;
-});
-
-audioPlayer.addEventListener('ended', function() {
-    isPlaying = false;
-    showVerdict("FINISH!", "#feca57");
-});
-
 var judgeLineTop = 440; 
-var scrollSpeed = 260; // 密度を下げたので速度も少しだけ優しく調整
+var scrollSpeed = 260; 
 
 function updateGame() {
     if (!isPlaying) return;
-    var currentTime = audioPlayer.currentTime;
+    
+    // 再生してからの経過時間を正確に計算
+    var currentTime = audioCtx.currentTime - startTime;
 
     chart.forEach(function(note) {
         if (currentTime >= note.time - 2.0 && !note.spawned && !note.hit) {
@@ -202,7 +199,7 @@ function spawnNoteElement(note) {
             return;
         }
 
-        var nowTime = audioPlayer.currentTime;
+        var nowTime = audioCtx.currentTime - startTime;
         var timeDiff = note.time - nowTime; 
         var currentTop = judgeLineTop - (timeDiff * scrollSpeed);
 
@@ -232,7 +229,7 @@ window.addEventListener('keydown', function(e) {
     var key = e.key.toUpperCase();
     if (lanes.includes(key)) {
         if (!isPlaying) return;
-        var currentTime = audioPlayer.currentTime;
+        var currentTime = audioCtx.currentTime - startTime;
         
         var targetNote = chart.find(function(note) {
             return note.lane === key && !note.hit && Math.abs(note.time - currentTime) < 0.15;
