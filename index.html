@@ -2,17 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ブラウザ高精度AI解析 DFJKリズムゲーム (HTML完結版)</title>
+    <title>音色強制発火＆初心者版 DFJKリズムゲーム</title>
     <style>
         body { background-color: #1a1a1a; color: #ffffff; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .input-area { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; background-color: #2a2a2a; padding: 15px; border-radius: 8px; border: 2px dashed #555; width: 400px; }
-        input[type="file"] { display: none; }
-        .file-label { padding: 10px 20px; background-color: #ff4757; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; }
-        .file-label:hover { background-color: #ff6b81; }
-        #start-btn { padding: 12px 25px; background-color: #2ed573; color: white; font-size: 18px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; display: none; box-shadow: 0 0 10px #2ed573; }
-        #start-btn:hover { background-color: #26af5f; }
+        .input-area { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; background-color: #2a2a2a; padding: 15px; border-radius: 8px; width: 360px; }
+        .file-label { padding: 10px 20px; background-color: #ff4757; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; text-align: center; width: 80%; }
+        #start-btn { padding: 12px 25px; background-color: #2ed573; color: white; font-size: 18px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; display: none; width: 85%; box-shadow: 0 0 10px #2ed573; }
         #status { margin-bottom: 15px; color: #feca57; font-weight: bold; text-align: center; }
-        #game-layout { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         #game-container { width: 360px; height: 500px; background-color: #111; border: 4px solid #333; border-radius: 8px; position: relative; overflow: hidden; }
         #lanes { display: flex; width: 100%; height: 100%; }
         .lane { flex: 1; height: 100%; border-right: 1px solid #222; position: relative; }
@@ -23,144 +19,122 @@
         #ui-overlay { position: absolute; top: 20%; width: 100%; text-align: center; pointer-events: none; z-index: 20; }
         #judge-text { font-size: 28px; font-weight: bold; height: 35px; }
         #combo-text { font-size: 20px; color: #feca57; }
+        audio { width: 360px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>ブラウザ高精度AI解析 DFJKリズムゲーム</h1>
+    <h1>強制音出し＆初心者向け DFJKリズムゲーム</h1>
     
     <div class="input-area">
-        <div id="drop-zone">音楽ファイル（mp3/wavなど）を選択してください</div>
         <label class="file-label">
-            ファイルを選択
-            <input type="file" id="audio-file" accept="audio/*" onchange="handleFileSelect(event)">
+            ① 音楽ファイルを選択
+            <input type="file" id="audio-file" accept="audio/*" onchange="loadFile(event)">
         </label>
-        <button id="start-btn" onclick="startGame()">ゲームスタート！(音声を有効化)</button>
+        <button id="start-btn" onclick="startGame()">② ゲームスタート！</button>
+        <audio id="main-audio" controls style="display:none;"></audio>
     </div>
-    <div id="status">曲を読み込むと、自動で音ハメ譜面が生成されます。</div>
+    <div id="status">まずは音楽ファイルを選んでね！</div>
 
-    <div id="game-layout">
-        <div id="game-container">
-            <div id="ui-overlay">
-                <div id="judge-text"></div>
-                <div id="combo-text"></div>
-            </div>
-            <div id="lanes">
-                <div class="lane" id="lane-D"><div class="key-label">D</div></div>
-                <div class="lane" id="lane-F"><div class="key-label">F</div></div>
-                <div class="lane" id="lane-J"><div class="key-label">J</div></div>
-                <div class="lane" id="lane-K"><div class="key-label">K</div></div>
-            </div>
-            <div id="judge-line"></div>
+    <div id="game-container">
+        <div id="ui-overlay">
+            <div id="judge-text"></div>
+            <div id="combo-text"></div>
         </div>
+        <div id="lanes">
+            <div class="lane" id="lane-D"><div class="key-label">D</div></div>
+            <div class="lane" id="lane-F"><div class="key-label">F</div></div>
+            <div class="lane" id="lane-J"><div class="key-label">J</div></div>
+            <div class="lane" id="lane-K"><div class="key-label">K</div></div>
+        </div>
+        <div id="judge-line"></div>
     </div>
 
 <script>
-var audioCtx;
-var audioBuffer = null;
-var audioSource = null;
-var startTime = 0;
+var audioPlayer = document.getElementById('main-audio');
+var synthCtx = null;
 var chart = [];
 var combo = 0;
 var isPlaying = false;
 var lanes = ['D', 'F', 'J', 'K'];
+var gameStartTime = 0;
 
-function handleFileSelect(event) {
+function loadFile(event) {
     var file = event.target.files[0];
     if (!file) return;
 
-    document.getElementById('status').innerText = "ブラウザAIが楽曲を解析中...（数秒かかります）";
-    document.getElementById('start-btn').style.display = 'none';
+    var fileURL = URL.createObjectURL(file);
+    audioPlayer.src = fileURL;
+    
     resetGame();
-
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        audioCtx.decodeAudioData(e.target.result, function(buffer) {
-            audioBuffer = buffer; // 音データを保存
-            analyzeAudio(buffer);
-        });
-    };
-    reader.readAsArrayBuffer(file);
+    generateSuperEasyChart();
+    
+    document.getElementById('status').innerText = "読み込み完了！②のスタートボタンを押してね！";
+    document.getElementById('start-btn').style.display = "block";
 }
 
-function analyzeAudio(buffer) {
-    var rawData = buffer.getChannelData(0);
-    var sampleRate = buffer.sampleRate;
-    
-    var frameSize = Math.floor(sampleRate * 0.02);
-    var energies = [];
-    
-    for (var i = 0; i < rawData.length; i += frameSize) {
-        var sum = 0;
-        for (var j = 0; j < frameSize && (i + j) < rawData.length; j++) {
-            sum += rawData[i + j] * rawData[i + j];
-        }
-        energies.push(Math.sqrt(sum / frameSize));
-    }
-
+// 【難易度調整】かなり優しくまったりした譜面に変更
+function generateSuperEasyChart() {
     chart = [];
-    var maxEnergy = Math.max(...energies);
-    var lastNoteTime = 0;
+    var totalSeconds = 300; 
+    var lastTime = 2.0;
 
-    for (var i = 1; i < energies.length - 1; i++) {
-        var time = (i * frameSize) / sampleRate;
-        
-        if (energies[i] > energies[i - 1] && energies[i] > energies[i + 1] && energies[i] > (maxEnergy * 0.07)) {
-            if (time - lastNoteTime > 0.08) {
-                var lane = lanes[Math.floor(Math.random() * lanes.length)];
-                chart.push({
-                    time: time,
-                    lane: lane,
-                    hit: false,
-                    spawned: false
-                });
-                lastNoteTime = time;
-            }
-        }
+    while (lastTime < totalSeconds) {
+        // ノーツの間隔を「0.4秒〜0.8秒」にして、リズムを格段に遅く優しくしました
+        var interval = 0.4 + (Math.random() * 0.4);
+        lastTime += interval;
+
+        var lane = lanes[Math.floor(Math.random() * lanes.length)];
+        chart.push({
+            time: lastTime,
+            lane: lane,
+            hit: false,
+            spawned: false
+        });
     }
-
-    document.getElementById('status').innerText = "解析完了！総ノーツ数: " + chart.length + " です。スタートボタンを押してください！";
-    document.getElementById('start-btn').style.display = 'block';
 }
 
-// 【新システム】ブラウザのスピーカーへ直接音声を流し込む
-function startGame() {
-    if (!audioBuffer || !audioCtx) return;
-
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+// 【絶対音出しシステム】万が一音楽が鳴らなくても、代わりに裏で電子メロディを強制演奏する
+function playBackupTone() {
+    if (!synthCtx) {
+        synthCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-
-    // 新しい再生ノードを作成してスピーカーに接続
-    audioSource = audioCtx.createBufferSource();
-    audioSource.buffer = audioBuffer;
-    audioSource.connect(audioCtx.destination);
+    if (synthCtx.state === 'suspended') {
+        synthCtx.resume();
+    }
     
-    // 再生開始
-    audioSource.start(0);
-    startTime = audioCtx.currentTime; // 開始時間を記録
+    // ピコッという短い音を鳴らす命令
+    var osc = synthCtx.createOscillator();
+    var gain = synthCtx.createGain();
+    osc.type = 'triangle'; 
+    osc.frequency.setValueAtTime(330, synthCtx.currentTime); // ミの音
+    gain.gain.setValueAtTime(0.2, synthCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, synthCtx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(synthCtx.destination);
+    osc.start();
+    osc.stop(synthCtx.currentTime + 0.15);
+}
+
+function startGame() {
+    // もし音楽プレイヤーが壊れていてもゲームが動くように、時間を強制取得
+    if (!synthCtx) {
+        synthCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    synthCtx.resume();
+
+    audioPlayer.play().catch(function(e) {
+        console.log("オーディオ再生はスキップ（電子音モードで走ります）");
+    });
+
+    gameStartTime = performance.now();
     isPlaying = true;
-    
-    document.getElementById('start-btn').style.display = 'none';
-    document.getElementById('status').innerText = "演奏中！";
-    
-    // ゲームループ開始
+    document.getElementById('start-btn').style.display = "none";
+    document.getElementById('status').innerText = "演奏中！ノーツに合わせてタイミングよく叩こう！";
     updateGame();
-
-    // 曲が終わったときの処理
-    audioSource.onended = function() {
-        isPlaying = false;
-        showVerdict("FINISH!", "#feca57");
-    };
 }
 
 function resetGame() {
-    if (audioSource) {
-        try { audioSource.stop(); } catch(e) {}
-    }
     chart = [];
     combo = 0;
     isPlaying = false;
@@ -170,13 +144,13 @@ function resetGame() {
 }
 
 var judgeLineTop = 440; 
-var scrollSpeed = 260; 
+var scrollSpeed = 180; // ノーツの落ちてくるスピードもかなり遅くして優しく
 
 function updateGame() {
     if (!isPlaying) return;
     
-    // 再生してからの経過時間を正確に計算
-    var currentTime = audioCtx.currentTime - startTime;
+    // 音楽ファイルの時間、または内部タイマーの正確な方を使用
+    var currentTime = audioPlayer.currentTime > 0 ? audioPlayer.currentTime : (performance.now() - gameStartTime) / 1000;
 
     chart.forEach(function(note) {
         if (currentTime >= note.time - 2.0 && !note.spawned && !note.hit) {
@@ -193,14 +167,21 @@ function spawnNoteElement(note) {
     noteElement.className = 'note';
     laneElement.appendChild(noteElement);
 
+    // ノーツがラインに重なる瞬間に、強制的に「ピコッ」と音を鳴らす
+    setTimeout(function() {
+        if (isPlaying && !note.hit) {
+            playBackupTone(); 
+        }
+    }, 2000 - 60); // 落ちてくる2秒後にジャストで発火
+
     function animateNote() {
         if (!isPlaying) {
             if (!note.hit && noteElement.parentNode) requestAnimationFrame(animateNote);
             return;
         }
 
-        var nowTime = audioCtx.currentTime - startTime;
-        var timeDiff = note.time - nowTime; 
+        var currentTime = audioPlayer.currentTime > 0 ? audioPlayer.currentTime : (performance.now() - gameStartTime) / 1000;
+        var timeDiff = note.time - currentTime; 
         var currentTop = judgeLineTop - (timeDiff * scrollSpeed);
 
         if (note.hit) {
@@ -208,7 +189,7 @@ function spawnNoteElement(note) {
             return;
         }
 
-        if (timeDiff < -0.15) {
+        if (timeDiff < -0.2) {
             noteElement.remove();
             if (!note.hit) {
                 showVerdict("MISS", "#ff4757");
@@ -229,10 +210,10 @@ window.addEventListener('keydown', function(e) {
     var key = e.key.toUpperCase();
     if (lanes.includes(key)) {
         if (!isPlaying) return;
-        var currentTime = audioCtx.currentTime - startTime;
+        var currentTime = audioPlayer.currentTime > 0 ? audioPlayer.currentTime : (performance.now() - gameStartTime) / 1000;
         
         var targetNote = chart.find(function(note) {
-            return note.lane === key && !note.hit && Math.abs(note.time - currentTime) < 0.15;
+            return note.lane === key && !note.hit && Math.abs(note.time - currentTime) < 0.18;
         });
 
         if (targetNote) {
@@ -240,6 +221,9 @@ window.addEventListener('keydown', function(e) {
             showVerdict("PERFECT", "#00d2d3");
             combo++;
             document.getElementById('combo-text').innerText = combo + " COMBO";
+            
+            // 叩いた時にも気持ちいい打鍵音を鳴らす
+            playBackupTone();
         }
     }
 });
