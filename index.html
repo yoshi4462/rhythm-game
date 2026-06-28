@@ -2,16 +2,15 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>YouTube AI自動解析 DFJKリズムゲーム</title>
+    <title>ブラウザ高精度AI解析 DFJKリズムゲーム (HTML完結版)</title>
     <style>
         body { background-color: #1a1a1a; color: #ffffff; font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .input-area { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-        input[type="text"] { width: 300px; padding: 10px; border-radius: 4px; border: none; }
-        select { padding: 10px; border-radius: 4px; border: none; background-color: #333; color: white; font-weight: bold; cursor: pointer; }
-        button { padding: 10px 20px; background-color: #ff4757; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
-        #status { margin-bottom: 10px; color: #feca57; font-weight: bold; }
-        #game-layout { display: flex; gap: 30px; }
+        .input-area { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; align-items: center; background-color: #2a2a2a; padding: 15px; border-radius: 8px; border: 2px dashed #555; width: 400px; }
+        input[type="file"] { display: none; }
+        .file-label { padding: 10px 20px; background-color: #ff4757; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .file-label:hover { background-color: #ff6b81; }
+        #status { margin-bottom: 15px; color: #feca57; font-weight: bold; text-align: center; }
+        #game-layout { display: flex; flex-direction: column; align-items: center; gap: 20px; }
         #game-container { width: 360px; height: 500px; background-color: #111; border: 4px solid #333; border-radius: 8px; position: relative; overflow: hidden; }
         #lanes { display: flex; width: 100%; height: 100%; }
         .lane { flex: 1; height: 100%; border-right: 1px solid #222; position: relative; }
@@ -22,25 +21,23 @@
         #ui-overlay { position: absolute; top: 20%; width: 100%; text-align: center; pointer-events: none; z-index: 20; }
         #judge-text { font-size: 28px; font-weight: bold; height: 35px; }
         #combo-text { font-size: 20px; color: #feca57; }
+        audio { width: 360px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>YouTube AI自動解析 DFJKリズムゲーム</h1>
+    <h1>ブラウザ高精度AI解析 DFJKリズムゲーム</h1>
     
     <div class="input-area">
-        <input type="text" id="video-url" placeholder="YouTube動画のURLを入力">
-        <select id="difficulty-select">
-            <option value="easy">かんたん (Easy)</option>
-            <option value="normal" selected>ふつう (Normal)</option>
-            <option value="hard">むずかしい (Hard)</option>
-        </select>
-        <button id="load-btn" onclick="requestAnalysis()">曲を解析して読み込む</button>
+        <div id="drop-zone">音楽ファイル（mp3/wavなど）を選択してください</div>
+        <label class="file-label">
+            ファイルを選択
+            <input type="file" id="audio-file" accept="audio/*" onchange="handleFileSelect(event)">
+        </label>
     </div>
-    <div id="status"></div>
+    <div id="status">曲を読み込むと、自動で高密度な音ハメ譜面が生成されます。</div>
 
     <div id="game-layout">
-        <div id="player"></div>
         <div id="game-container">
             <div id="ui-overlay">
                 <div id="judge-text"></div>
@@ -54,100 +51,113 @@
             </div>
             <div id="judge-line"></div>
         </div>
+        <audio id="audio-player" controls></audio>
     </div>
 
 <script>
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-var player;
-function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-        height: '240',
-        width: '360',
-        videoId: '', 
-        events: { 'onStateChange': onPlayerStateChange }
-    });
-}
-
-function extractVideoId(url) {
-    var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    var match = url.match(regExp);
-    return (match && match[2].length == 11) ? match[2] : null;
-}
-
-async function requestAnalysis() {
-    var url = document.getElementById('video-url').value;
-    var diff = document.getElementById('difficulty-select').value; // 難易度を取得
-    var videoId = extractVideoId(url);
-    
-    if(!videoId) {
-        alert("有効なYouTubeのURLを入力してください。");
-        return;
-    }
-
-    var statusEl = document.getElementById('status');
-    var btn = document.getElementById('load-btn');
-    statusEl.innerText = "高精度リズム解析中... (30秒ほどかかります)";
-    btn.disabled = true;
-
-    try {
-        var response = await fetch('http://127.0.0.1:5000/generate', {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url, difficulty: diff }) // 難易度を送信
-        });
-        
-        var data = await response.json();
-        
-        if (data.chart) {
-            chart = data.chart;
-            player.loadVideoById(videoId);
-            resetGameUI();
-            statusEl.innerText = "自動生成完了！動画が再生されるとスタートします！";
-        } else {
-            statusEl.innerText = "エラー: " + (data.error || "解析に失敗しました");
-        }
-    } catch (e) {
-        console.error(e);
-        statusEl.innerText = "Pythonサーバーに接続できませんでした。";
-    } finally {
-        btn.disabled = false;
-    }
-}
-
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+var audioPlayer = document.getElementById('audio-player');
 var chart = [];
 var combo = 0;
 var isPlaying = false;
+var lanes = ['D', 'F', 'J', 'K'];
 
-function resetGameUI() {
+// ファイルが読み込まれた時の処理
+function handleFileSelect(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    document.getElementById('status').innerText = "ブラウザAIが楽曲を解析中...（数秒かかります）";
+    resetGame();
+
+    // プレイヤーに音声をセット
+    var fileURL = URL.createObjectURL(file);
+    audioPlayer.src = fileURL;
+
+    // 音声をデコードして波形解析を行う
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        audioCtx.decodeAudioData(e.target.result, function(buffer) {
+            analyzeAudio(buffer);
+        });
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// 【重要】Pythonのlibrosaと同じことをブラウザ内で行う解析アルゴリズム
+function analyzeAudio(buffer) {
+    var rawData = buffer.getChannelData(0); // モノラルで波形を取得
+    var sampleRate = buffer.sampleRate;
+    
+    // 0.02秒（20ms）ごとの音量（エネルギー）の変化を計算
+    var frameSize = Math.floor(sampleRate * 0.02);
+    var energies = [];
+    
+    for (var i = 0; i < rawData.length; i += frameSize) {
+        var sum = 0;
+        for (var j = 0; j < frameSize && (i + j) < rawData.length; j++) {
+            sum += rawData[i + j] * rawData[i + j];
+        }
+        energies.push(Math.sqrt(sum / frameSize));
+    }
+
+    // 音の立ち上がり（オンセット）を検出
+    chart = [];
+    var maxEnergy = Math.max(...energies);
+    var lastNoteTime = 0;
+
+    for (var i = 1; i < energies.length - 1; i++) {
+        var time = (i * frameSize) / sampleRate;
+        
+        // 前後のフレームより音が大きく、かつ全体の最大音量の 6% 以上の場所（無音での生成を防止）
+        if (energies[i] > energies[i - 1] && energies[i] > energies[i + 1] && energies[i] > (maxEnergy * 0.06)) {
+            
+            // 激難を超える超高密度制限：ノーツの間隔を「最短0.04秒」まで許容して詰め込む
+            if (time - lastNoteTime > 0.04) {
+                var lane = lanes[Math.floor(Math.random() * lanes.length)];
+                chart.push({
+                    time: time,
+                    lane: lane,
+                    hit: false,
+                    spawned: false
+                });
+                lastNoteTime = time;
+            }
+        }
+    }
+
+    document.getElementById('status').innerText = "解析完了！総ノーツ数: " + chart.length + " の超鬼譜面が生成されました！再生ボタンでスタート！";
+}
+
+function resetGame() {
+    chart = [];
     combo = 0;
     document.getElementById('judge-text').innerText = "";
     document.getElementById('combo-text').innerText = "";
     document.querySelectorAll('.note').forEach(n => n.remove());
 }
 
-function onPlayerStateChange(event) {
-    if (event.data == YT.PlayerState.PLAYING) {
-        isPlaying = true;
-        updateGame();
-    } else if (event.data == YT.PlayerState.ENDED) {
-        isPlaying = false;
-        showVerdict("FINISH!", "#feca57");
-    } else {
-        isPlaying = false;
-    }
-}
+// 音楽の再生状態の監視
+audioPlayer.addEventListener('play', function() {
+    isPlaying = true;
+    updateGame();
+});
+
+audioPlayer.addEventListener('pause', function() {
+    isPlaying = false;
+});
+
+audioPlayer.addEventListener('ended', function() {
+    isPlaying = false;
+    showVerdict("FINISH!", "#feca57");
+});
 
 var judgeLineTop = 440; 
-var scrollSpeed = 250; 
+var scrollSpeed = 280; // ノーツが速く感じるようにスピードも少しアップ！
 
 function updateGame() {
     if (!isPlaying) return;
-    var currentTime = player.getCurrentTime();
+    var currentTime = audioPlayer.currentTime;
 
     chart.forEach(function(note) {
         if (currentTime >= note.time - 2.0 && !note.spawned && !note.hit) {
@@ -170,7 +180,7 @@ function spawnNoteElement(note) {
             return;
         }
 
-        var nowTime = player.getCurrentTime();
+        var nowTime = audioPlayer.currentTime;
         var timeDiff = note.time - nowTime; 
         var currentTop = judgeLineTop - (timeDiff * scrollSpeed);
 
@@ -196,14 +206,16 @@ function spawnNoteElement(note) {
     requestAnimationFrame(animateNote);
 }
 
+// キーボード判定
 window.addEventListener('keydown', function(e) {
     var key = e.key.toUpperCase();
-    if (['D', 'F', 'J', 'K'].includes(key)) {
+    if (lanes.includes(key)) {
         if (!isPlaying) return;
-        var currentTime = player.getCurrentTime();
+        var currentTime = audioPlayer.currentTime;
         
+        // 最もタイミングの近いノーツを探す
         var targetNote = chart.find(function(note) {
-            return note.lane === key && !note.hit && Math.abs(note.time - currentTime) < 0.2;
+            return note.lane === key && !note.hit && Math.abs(note.time - currentTime) < 0.15;
         });
 
         if (targetNote) {
