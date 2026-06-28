@@ -134,10 +134,21 @@ function analyzeAudio(buffer) {
 
 // ボタンを押した瞬間にブラウザの音ブロックを解除して再生する
 function startGame() {
-    if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume(); // 音声機能をアクティブにする
+    // ボタンを押した瞬間に、ブラウザの音声機能を「強制的に」アクティブにする
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    audioPlayer.play();
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    
+    // プレイヤーの音量を最大(1.0)にして再生
+    audioPlayer.volume = 1.0; 
+    audioPlayer.play().catch(function(error) {
+        console.error("再生エラー:", error);
+        alert("ブラウザが音の再生をブロックしました。もう一度ボタンを押すか、画面を一度クリックしてください。");
+    });
+    
     document.getElementById('start-btn').style.display = 'none';
 }
 
