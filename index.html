@@ -88,7 +88,7 @@ async function requestAnalysis() {
 
     try {
         // パソコン内で起動しているPythonサーバー(port:5000)へ送る
-        var response = await fetch('http://localhost:5000/generate', {
+        var response = await fetch('http://127.0.0.1:5000/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: url })
