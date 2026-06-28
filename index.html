@@ -87,9 +87,10 @@ async function requestAnalysis() {
     btn.disabled = true;
 
     try {
-        // パソコン内で起動しているPythonサーバー(port:5000)へ送る
+        // 接続先を 127.0.0.1:5000 に完全に固定
         var response = await fetch('http://127.0.0.1:5000/generate', {
             method: 'POST',
+            mode: 'cors', // CORSモードを明示的に指定
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: url })
         });
@@ -105,7 +106,8 @@ async function requestAnalysis() {
             statusEl.innerText = "エラー: " + (data.error || "解析に失敗しました");
         }
     } catch (e) {
-        statusEl.innerText = "Pythonサーバーに接続できません。IDLEでRun Module(F5)しているか確認してください。";
+        console.error(e);
+        statusEl.innerText = "Pythonサーバーに接続できません。ターミナルで起動しているか確認してください。";
     } finally {
         btn.disabled = false;
     }
